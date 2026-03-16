@@ -1,15 +1,12 @@
 name: Deploy API
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "api/**"
+  workflow_run:
+    workflows: ["Docker Image API CI"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: build_api
 
     steps:
       - name: Deploy to server

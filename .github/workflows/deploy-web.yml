@@ -1,15 +1,12 @@
 name: Deploy Web
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "clients/web/**"
+  workflow_run:
+    workflows: ["Docker Image Web CI"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: build_web
 
     steps:
       - name: Deploy to server
