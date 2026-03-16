@@ -45,6 +45,12 @@ def create_user(email:str, password_hash:str, db:Session = Depends(get_db)):
 def get_user(email:str, db:Session = Depends(get_db)):
     return db.query(User).filter(User.email == email).first()
 
+def get_user_by_id(id:int, db:Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == id).first()
+    if user is None:
+        raise HTTPException(400, "User doesn't exist")
+    return user
+
 def user_exist(email:str, db:Session = Depends(get_db)) -> bool:
     return get_user(email, db) != None
 
