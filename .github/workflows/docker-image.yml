@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t arnostar/nottiktokapi:latest .
+        run: docker build -t arnostar/nottiktokapi:latest ./api
 
       - name: Push Docker image
         run: docker push arnostar/nottiktokapi:latest
