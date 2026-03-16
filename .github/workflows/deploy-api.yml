@@ -11,11 +11,11 @@ jobs:
     steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
-        debug: true
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          debug: true
           script: |
             docker pull arnostar/nottiktokapi:latest
             docker stop nottiktokapi || true
