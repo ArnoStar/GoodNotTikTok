@@ -3,6 +3,8 @@ name: Deploy API
 on:
   workflow_run:
     workflows: ["Docker Image API CI"]
+    types:
+      - completed
 
 jobs:
   deploy:

@@ -3,6 +3,8 @@ name: Deploy Web
 on:
   workflow_run:
     workflows: ["Docker Image Web CI"]
+    types:
+      - completed
 
 jobs:
   deploy:
