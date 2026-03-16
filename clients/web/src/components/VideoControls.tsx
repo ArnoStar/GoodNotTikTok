@@ -21,7 +21,7 @@ export default function VideoControls({ onPrev, onNext, onLike, onAccount, onTog
     height: 50,
     borderRadius: '50%',
     border: 'none',
-    backgroundColor: '#007bff',
+    backgroundColor: '#1b1f24ff',
     color: 'white',
     cursor: 'pointer',
     display: 'flex',           // enable flex
@@ -54,7 +54,7 @@ export default function VideoControls({ onPrev, onNext, onLike, onAccount, onTog
                 height: 50,
                 borderRadius: '50%',
                 border: 'none',
-                backgroundColor: '#007bff',
+                backgroundColor: '#1b1f24ff',
                 color: 'white',
                 cursor: 'pointer',
                 margin: '150px',
@@ -89,7 +89,7 @@ export default function VideoControls({ onPrev, onNext, onLike, onAccount, onTog
             justifyContent: 'center',  // center horizontally
             alignItems: 'center',      // center vertically
             fontSize: '20px',
-            backgroundColor: liked ? '#007b55' : '#007bff'
+            backgroundColor: liked ? '#007b55' : '#1b1f24ff'
           }}
         >
           ❤️
