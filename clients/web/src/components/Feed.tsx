@@ -39,7 +39,11 @@ export default function Feed() {
       const likeRes = await fetch(`/api/video/${v.id}/like`)
       const likes = likeRes.ok ? Number(await likeRes.json()) : 0
 
-      const likedRes = await fetch(`/api/video/${v.id}/like_state`)
+      const likedRes = await fetch(`/api/video/${v.id}/like_state`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${auth.token}` }
+          })
+
       const liked = likeRes.ok ? Boolean(await likedRes.json()) : false
 
       return {
