@@ -112,7 +112,11 @@ def generate_useable_id(db: Session) -> str:
         id = "".join(random.choices(charset, k=16))
         video = db.query(Video).filter(Video.id == id).first()
     return id
-    
+
+def get_like_state(video:Video, user:User, db:Session) -> bool:
+    like = db.query(Like).filter(Like.user_id == user.id, Like.video_id == video.id).first()
+    return like != None
+
 def like_video(video:Video, user:User, db:Session) -> Like:
     if db.query(Like).filter(Like.user_id == user.id, Like.video_id == video.id).first():
         raise HTTPException(400, "You already liked this video")

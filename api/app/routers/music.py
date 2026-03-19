@@ -6,7 +6,8 @@ from app.db.models import User
 from app.shemas.music import CommentPost, ProfileGet
 from app.deps.auth import get_current_user
 from app.services.music import (add_music, get_metadata_music, verify_video, download_video, generate_useable_id, add_metadata_video, get_metadata_video,
-                                like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video)
+                                like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video,
+                                get_like_state)
 from app.services.auth import get_user_by_id
 from app.core.config import settings
 
@@ -34,6 +35,11 @@ def get_video(video_id:str, db:Session = Depends(get_db)):
 @router.get("/{video_id}/like")
 def get_like_amount(video_id:str, db:Session = Depends(get_db)):
     return get_like_count(video_id, db)
+
+@router.get("/{video_id}/like_state")
+def lik_state_video(video_id:str, user:User = Depends(get_current_user),  db:Session = Depends(get_db)):
+    video = get_metadata_video(video_id, db)
+    return get_like_state(video, user, db)
 
 @router.put("/{video_id}/like")
 def lik_video(video_id:str, user:User = Depends(get_current_user),  db:Session = Depends(get_db)):
