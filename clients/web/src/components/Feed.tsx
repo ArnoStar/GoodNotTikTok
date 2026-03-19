@@ -39,11 +39,15 @@ export default function Feed() {
       const likeRes = await fetch(`/api/video/${v.id}/like`)
       const likes = likeRes.ok ? Number(await likeRes.json()) : 0
 
+      const likedRes = await fetch(`/api/video/${v.id}/like_state`)
+      const liked = likeRes.ok ? Boolean(await likedRes.json()) : false
+
       return {
         id: v.id,
         url: `/stream/${v.id}.mp4`,
         caption: v.caption,
-        likes
+        likes,
+        liked
       }
     } catch {
       return null
