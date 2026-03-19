@@ -25,23 +25,23 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token])
 
   async function login(email: string, password: string) {
-  const form = new URLSearchParams()
-  form.append('username', email)
-  form.append('password', password)
+    const form = new URLSearchParams()
+    form.append('username', email)
+    form.append('password', password)
 
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: form
-  })
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: form
+    })
 
-  if (!res.ok) throw new Error('Login failed')
+    if (!res.ok) throw new Error('Login failed')
 
-  const data = await res.json()
-  setToken(data.access_token)
-}
+    const data = await res.json()
+    setToken(data.access_token)
+  }
 
   function logout() {
     setToken(null)

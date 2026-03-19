@@ -6,3 +6,7 @@ class MusicPost(BaseModel):
 
 class CommentPost(BaseModel):
     text:str
+
+class ProfileGet(BaseModel):
+    id:int
+    email:str

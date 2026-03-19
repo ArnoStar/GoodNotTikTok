@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 
 from app.db.database_sql import get_db
 from app.db.models import User
-from app.shemas.music import CommentPost
+from app.shemas.music import CommentPost, ProfileGet
 from app.deps.auth import get_current_user
 from app.services.music import (add_music, get_metadata_music, verify_video, download_video, generate_useable_id, add_metadata_video, get_metadata_video,
                                 like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video)
@@ -56,7 +56,8 @@ def com_video(video_id:str, comment:CommentPost, user:User = Depends(get_current
 
 @router.get("/profile/{user_id}")
 def get_user_v(user_id:int, db:Session = Depends(get_db)):
-    return get_user_by_id(user_id, db)
+    user:User = get_user_by_id(user_id, db)
+    return ProfileGet(id=user.id, email=user.email)
 
 @router.get("/profile/{user_id}/followers")
 def get_all_followers_user(user_id:int, db:Session = Depends(get_db)):
