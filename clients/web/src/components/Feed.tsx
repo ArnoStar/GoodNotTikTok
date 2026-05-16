@@ -64,7 +64,10 @@ export default function Feed() {
         url: `/stream/${v.id}.mp4`,
         caption: v.caption,
         likes,
-        liked
+        liked,
+        added_by: {
+          id: v.added_by_id   // 👈 IMPORTANT FIX
+        }
       }
     } catch {
       return null
@@ -306,6 +309,7 @@ export default function Feed() {
         likes={
           videos[index]?.likes ?? 0
         }
+        userId={videos[index]?.added_by?.id}
       />
     </div>
   )

@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 type Props = {
   onPrev?: () => void
   onNext?: () => void
@@ -13,6 +15,8 @@ type Props = {
   likes?: number
 
   liked?: boolean
+
+  userId?: number | string
 }
 
 export default function VideoControls({
@@ -23,8 +27,11 @@ export default function VideoControls({
   onToggleMute,
   isMuted,
   likes,
-  liked
+  liked,
+  userId
 }: Props) {
+
+  const navigate = useNavigate()
 
   const emit = (name: string) => {
     try {
@@ -94,9 +101,9 @@ export default function VideoControls({
 
       <button
         onClick={() => {
-          onAccount?.()
+          if (!userId) return
 
-          emit('app:account')
+          navigate(`/profile/${userId}`)
         }}
         style={buttonStyle}
       >
