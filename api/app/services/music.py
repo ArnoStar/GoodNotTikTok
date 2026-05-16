@@ -9,6 +9,7 @@ from app.services.deps import register_function
 
 from pytubefix import AsyncYouTube
 from pytubefix.exceptions import VideoUnavailable, RegexMatchError
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from typing import Callable, Annotated
 from sqlalchemy.sql.expression import func
@@ -101,6 +102,13 @@ async def add_music(music_information:MusicPost, user:User = Depends(get_current
     music_metadata = add_metadata_music(music_id, user, db)
 
     return music_metadata
+
+def get_users_videos(id:int, db:Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == id).first()
+    if user is None:
+        raise HTTPException(400, "User doesn't exist")
+    return db.query(Video).filter(Video.added_by_id == user.id).order_by(desc(Video.added_date)).all()
+    
 
 def get_like_count(video_id:str, db: Session):
     return len(db.query(Like).filter(Like.video_id == video_id).all())
