@@ -25,16 +25,16 @@ export default function UploadPage({ onBack }: { onBack: () => void }) {
     setLoading(false)
 
     if (res.ok) {
-      alert("Upload successful")
+      alert("Загрузка успешна")
       onBack()
     } else {
-      alert("Upload failed")
+      alert("Загрузка не удалась")
     }
   }
 
   return (
     <div style={{ padding: 40 }}>
-      <h2>Upload Video</h2>
+      <h2>Загрузить видео</h2>
 
       <input
         type="file"
@@ -45,13 +45,13 @@ export default function UploadPage({ onBack }: { onBack: () => void }) {
       <br /><br />
 
       <button onClick={upload} disabled={!file || loading}>
-        {loading ? "Uploading..." : "Upload"}
+        {loading ? "Загрузка..." : "Загрузить"}
       </button>
 
       <br /><br />
 
       <button onClick={onBack}>
-        Back
+        Назад
       </button>
     </div>
   )

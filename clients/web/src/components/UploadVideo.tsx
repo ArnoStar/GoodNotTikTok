@@ -30,11 +30,11 @@ export default function UploadVideo() {
         throw new Error(txt)
       }
 
-      setMsg("Upload successful!")
+      setMsg("Загрузка успешна!")
       setFile(null)
 
     } catch (err) {
-      setMsg("Upload failed")
+      setMsg("Загрузка не удалась")
     } finally {
       setLoading(false)
     }
@@ -49,7 +49,7 @@ export default function UploadVideo() {
       />
 
       <button onClick={upload} disabled={loading || !file}>
-        {loading ? "Uploading..." : "Upload"}
+        {loading ? "Загрузка..." : "Загрузить"}
       </button>
 
       {msg && <div>{msg}</div>}
