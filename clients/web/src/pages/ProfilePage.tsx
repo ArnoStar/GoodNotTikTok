@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 type UserProfile = {
   id: number
@@ -13,6 +15,10 @@ type Video = {
 }
 
 export default function ProfilePage() {
+  const [_, setSearchParams] = useSearchParams()
+
+  const navigate = useNavigate()
+
   const { user_id } = useParams()
   const { token } = useAuth()
 
@@ -36,24 +42,19 @@ export default function ProfilePage() {
       setLoading(true)
 
       // 1. user info
-      const profileRes =
-        await fetch(
-          `/api/video/profile/${user_id}`
-        )
+      const profileRes = await fetch(
+        `/api/video/profile/${user_id}`
+      )
 
-      const profileData =
-        await profileRes.json()
-
+      const profileData = await profileRes.json()
       setProfile(profileData)
 
       // 2. followers
-      const followersRes =
-        await fetch(
-          `/api/video/profile/${user_id}/followers`
-        )
+      const followersRes = await fetch(
+        `/api/video/profile/${user_id}/followers`
+      )
 
-      const followersData =
-        await followersRes.json()
+      const followersData = await followersRes.json()
 
       setFollowers(
         Array.isArray(followersData)
@@ -62,13 +63,11 @@ export default function ProfilePage() {
       )
 
       // 3. followings
-      const followingsRes =
-        await fetch(
-          `/api/video/profile/${user_id}/followings`
-        )
+      const followingsRes = await fetch(
+        `/api/video/profile/${user_id}/followings`
+      )
 
-      const followingsData =
-        await followingsRes.json()
+      const followingsData = await followingsRes.json()
 
       setFollowings(
         Array.isArray(followingsData)
@@ -76,10 +75,14 @@ export default function ProfilePage() {
           : 0
       )
 
-      // 4. videos (from profile response)
-      if (profileData?.video_added) {
-        setVideos(profileData.video_added)
-      }
+      // 4. ✅ NEW: videos from dedicated endpoint
+      const videosRes = await fetch(
+        `/api/video/profile/${user_id}/videos`
+      )
+
+      const videosData = await videosRes.json()
+
+      setVideos(Array.isArray(videosData) ? videosData : [])
 
     } catch (err) {
       console.error(err)
@@ -103,7 +106,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ padding: 20, color: 'white' }}>
+    <div
+      style={{
+        height: '100vh',
+        overflowY: 'auto',
+        padding: 20,
+        color: 'white'
+      }}
+    >
 
       {/* HEADER */}
       <div style={{ marginBottom: 20 }}>
@@ -125,13 +135,16 @@ export default function ProfilePage() {
         style={{
           display: 'grid',
           gridTemplateColumns:
-            'repeat(3, 1fr)',
+            'repeat(auto-fill, minmax(320px, 1fr))',
           gap: 10
         }}
       >
         {videos.map((v) => (
           <div
             key={v.id}
+            onClick={() => {
+              navigate(`/?watch=${v.id}`)
+            }}
             style={{
               width: '100%',
               aspectRatio: '9 / 16',
@@ -142,18 +155,29 @@ export default function ProfilePage() {
             }}
           >
             <video
-              src={`/stream/${v.id}`}
+              src={`/stream/${v.id}.mp4`}
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover'
+                objectFit: 'cover',
+                background: '#000'
               }}
               muted
               preload="metadata"
+              onLoadedMetadata={(e) => {
+                e.currentTarget.currentTime = 0.1
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.play().catch(() => {})
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.pause()
+              }}
             />
           </div>
         ))}
       </div>
+
     </div>
   )
 }

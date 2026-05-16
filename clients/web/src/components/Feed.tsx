@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import VideoCard from './VideoCard'
 import type { VideoCardHandle } from './VideoCard'
 import { useAuth } from '../context/AuthContext'
@@ -7,309 +8,187 @@ import VideoControls from './VideoControls'
 type Video = {
   id: string
   url?: string
-  added_by?: {
-    id: number
-  }
+  added_by?: { id: number }
   caption?: string
   likes?: number
   liked?: boolean
 }
 
 export default function Feed() {
-  const [videos, setVideos] = useState<Video[]>([])
-  const [index, setIndex] = useState(0)
-
   const auth = useAuth()
-
   const vcRef = useRef<VideoCardHandle | null>(null)
 
+  const [videos, setVideos] = useState<Video[]>([])
   const [muted, setMuted] = useState(true)
 
-  async function fetchVideo(): Promise<Video | null> {
-    try {
-      const res = await fetch('/api/video/')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const watchId = searchParams.get('watch')
 
-      if (!res.ok) {
-        return null
-      }
+  // ---------------- FETCH ----------------
+  async function fetchRandom(): Promise<Video | null> {
+    const res = await fetch('/api/video/')
+    if (!res.ok) return null
 
-      const v = await res.json()
+    const v = await res.json()
 
-      // likes count
-      const likeRes = await fetch(
-        `/api/video/${v.id}/like`
-      )
+    const likeRes = await fetch(`/api/video/${v.id}/like`)
+    const likes = likeRes.ok ? Number(await likeRes.json()) : 0
 
-      const likes = likeRes.ok
-        ? Number(await likeRes.json())
-        : 0
+    const likedRes = await fetch(`/api/video/${v.id}/like_state`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
 
-      // liked state
-      const likedRes = await fetch(
-        `/api/video/${v.id}/like_state`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${auth.token}`
-          }
-        }
-      )
+    const liked = likedRes.ok
+      ? Boolean(await likedRes.json())
+      : false
 
-      const liked = likedRes.ok
-        ? Boolean(await likedRes.json())
-        : false
-
-      return {
-        id: v.id,
-        url: `/stream/${v.id}.mp4`,
-        caption: v.caption,
-        likes,
-        liked,
-        added_by: {
-          id: v.added_by_id   // 👈 IMPORTANT FIX
-        }
-      }
-    } catch {
-      return null
+    return {
+      id: v.id,
+      url: `/stream/${v.id}.mp4`,
+      caption: v.caption,
+      likes,
+      liked,
+      added_by: { id: v.added_by_id }
     }
   }
 
-  async function loadInitial() {
-    const arr: Video[] = []
+  async function fetchById(id: string): Promise<Video | null> {
+    const res = await fetch(`/api/video/${id}`)
+    if (!res.ok) return null
 
-    const ids = new Set()
+    const v = await res.json()
 
-    while (arr.length < 5) {
-      const v = await fetchVideo()
-
-      if (!v) continue
-
-      if (ids.has(v.id)) continue
-
-      ids.add(v.id)
-
-      arr.push(v)
+    return {
+      id: v.id,
+      url: `/stream/${v.id}.mp4`,
+      caption: v.caption,
+      likes: 0,
+      liked: false,
+      added_by: { id: v.added_by_id }
     }
-
-    setVideos(arr)
-
-    setIndex(2)
   }
 
+  // ---------------- INIT ----------------
   useEffect(() => {
-    loadInitial()
+    async function init() {
+      const arr: Video[] = []
+
+      if (watchId) {
+        const watched = await fetchById(watchId)
+        if (watched) arr.push(watched)
+      }
+
+      while (arr.length < 5) {
+        const v = await fetchRandom()
+        if (!v) continue
+        if (arr.find(x => x.id === v.id)) continue
+        arr.push(v)
+      }
+
+      setVideos(arr)
+
+      if (!watchId && arr.length >= 3) {
+        setSearchParams({ watch: arr[2].id }, { replace: true })
+      }
+    }
+
+    init()
   }, [])
 
-  // mouse wheel navigation
-  useEffect(() => {
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY > 0) {
-        next()
-      } else {
-        prev()
-      }
-    }
+  // ---------------- INDEX (always derived from URL) ----------------
+  const index = videos.findIndex(v => v.id === watchId)
+  const safeIndex = index === -1 ? 2 : index
 
-    window.addEventListener('wheel', onWheel)
+  // ---------------- UPDATE URL ONLY ----------------
+  const setCurrent = useCallback((id: string) => {
+    setSearchParams({ watch: id }, { replace: true })
+  }, [])
 
-    return () => {
-      window.removeEventListener(
-        'wheel',
-        onWheel
-      )
-    }
-  }, [index, videos])
+  // ---------------- LIKE FIX (IMPORTANT) ----------------
+  const toggleLike = useCallback((videoId: string) => {
+    setVideos(prev =>
+      prev.map(v => {
+        if (v.id !== videoId) return v
 
-  async function like(id: string) {
-    if (!auth.token) return
+        const nextLiked = !v.liked
+        const nextLikes = (v.likes ?? 0) + (nextLiked ? 1 : -1)
 
-    setVideos((prev) =>
-      prev.map((video) => {
-        if (video.id !== id) {
-          return video
-        }
-
-        const alreadyLiked =
-          video.liked
-
-        if (alreadyLiked) {
-          fetch(
-            `/api/video/${id}/dislike`,
-            {
-              method: 'PUT',
-              headers: {
-                Authorization:
-                  `Bearer ${auth.token}`
-              }
-            }
-          )
-
-          return {
-            ...video,
-            liked: false,
-            likes: Math.max(
-              0,
-              (video.likes ?? 0) - 1
-            )
-          }
-        }
-
-        fetch(
-          `/api/video/${id}/like`,
-          {
+        if (v.liked) {
+          fetch(`/api/video/${videoId}/dislike`, {
             method: 'PUT',
-            headers: {
-              Authorization:
-                `Bearer ${auth.token}`
-            }
-          }
-        )
+            headers: { Authorization: `Bearer ${auth.token}` }
+          })
+        } else {
+          fetch(`/api/video/${videoId}/like`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${auth.token}` }
+          })
+        }
 
         return {
-          ...video,
-          liked: true,
-          likes:
-            (video.likes ?? 0) + 1
+          ...v,
+          liked: nextLiked,
+          likes: Math.max(0, nextLikes)
         }
       })
     )
-  }
+  }, [auth.token])
 
-  function prev() {
-    setIndex((i) =>
-      Math.max(0, i - 1)
-    )
-  }
+  // ---------------- NAV ----------------
+  const prev = useCallback(() => {
+    const prevVideo = videos[safeIndex - 1]
+    if (prevVideo) setCurrent(prevVideo.id)
+  }, [videos, safeIndex, setCurrent])
 
-  async function next() {
-    if (index < 2) {
-      setIndex((i) =>
-        Math.min(
-          videos.length - 1,
-          i + 1
-        )
-      )
+  const next = useCallback(async () => {
+    const nextVideo = videos[safeIndex + 1]
 
+    if (nextVideo) {
+      setCurrent(nextVideo.id)
       return
     }
 
-    const newVideo =
-      await fetchVideo()
+    const v = await fetchRandom()
+    if (!v) return
 
-    if (!newVideo) return
+    setVideos(prev => [...prev.slice(1), v])
+    setCurrent(v.id)
+  }, [videos, safeIndex])
 
-    setVideos((prev) => {
-      return [
-        ...prev.slice(1),
-        newVideo
-      ]
-    })
+  // ---------------- GLOBAL EVENTS ----------------
 
-    setIndex(2)
-  }
-
-  // global controls
-  useEffect(() => {
-    const onPrev = () => prev()
-
-    const onNext = () => next()
-
-    const onToggleMute = () => {
-      const current = vcRef.current
-
-      if (!current) return
-
-      current.toggleMute()
-
-      const isMuted =
-        current.isMuted()
-
-      setMuted(isMuted)
-    }
-
-    const onLike = () => {
-      const id =
-        videos[index]?.id
-
-      if (id) {
-        like(id)
-      }
-    }
-
-    window.addEventListener(
-      'app:prev',
-      onPrev
-    )
-
-    window.addEventListener(
-      'app:next',
-      onNext
-    )
-
-    window.addEventListener(
-      'app:toggleMute',
-      onToggleMute
-    )
-
-    window.addEventListener(
-      'app:like',
-      onLike
-    )
-
-    return () => {
-      window.removeEventListener(
-        'app:prev',
-        onPrev
-      )
-
-      window.removeEventListener(
-        'app:next',
-        onNext
-      )
-
-      window.removeEventListener(
-        'app:toggleMute',
-        onToggleMute
-      )
-
-      window.removeEventListener(
-        'app:like',
-        onLike
-      )
-    }
-  }, [videos, index])
-
+  // ---------------- RENDER ----------------
   return (
     <div className="feed">
       {videos.map((v, i) => (
         <VideoCard
-          key={`${v.id}-${i}`}
-          ref={
-            i === index
-              ? vcRef
-              : null
-          }
+          key={v.id}
+          ref={i === safeIndex ? vcRef : null}
           video={{
             ...v,
-            url:
-              v.url ||
-              `/stream/${v.id}.mp4`
+            url: v.url || `/stream/${v.id}.mp4`
           }}
-          active={i === index}
-          onLike={() => like(v.id)}
-          likes={v.likes ?? 0}
+          active={i === safeIndex}
         />
       ))}
 
       <VideoControls
         isMuted={muted}
-        liked={
-          videos[index]?.liked
-        }
-        likes={
-          videos[index]?.likes ?? 0
-        }
-        userId={videos[index]?.added_by?.id}
+        liked={videos[safeIndex]?.liked}
+        likes={videos[safeIndex]?.likes ?? 0}
+        userId={videos[safeIndex]?.added_by?.id}
+        onPrev={prev}
+        onNext={next}
+        onLike={() => {
+          const id = videos[safeIndex]?.id
+          if (id) toggleLike(id)
+        }}
+        onToggleMute={() => {
+          const player = vcRef.current
+          if (!player) return
+          player.toggleMute()
+          setMuted(player.isMuted())
+        }}
       />
     </div>
   )
