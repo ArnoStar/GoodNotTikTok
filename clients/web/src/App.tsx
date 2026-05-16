@@ -216,12 +216,12 @@ function Main() {
       <div id="app-root" style={{ position: 'relative' }}>
 
         <div style={{ position: 'fixed', top: '1em', right: '1em'}}>
-          <button onClick={auth.logout}>Logout</button>
+          <button onClick={auth.logout}>Выход</button>
         </div>
 
         <div style={{ position: 'fixed', top: '1em', left: '1em'}}>
           <button onClick={() => setView("upload")}>
-            Upload
+            Загрузить
           </button>
         </div>
 
@@ -237,7 +237,7 @@ function Main() {
         <div>
           <LoginForm />
           <div style={{ marginTop: 12 }}>
-            <button onClick={() => setView('signup')}>Create account</button>
+            <button onClick={() => setView('signup')}>Зарегистрироваться</button>
           </div>
         </div>
       )}
@@ -246,7 +246,7 @@ function Main() {
         <div>
           <SignUpForm onSigned={(email, password) => { setSigned({ email, password }); setView('confirm') }} />
           <div style={{ marginTop: 12 }}>
-            <button onClick={() => setView('login')}>Back to sign in</button>
+            <button onClick={() => setView('login')}>Вернуться к авторизации</button>
           </div>
         </div>
       )}
@@ -262,7 +262,7 @@ function Main() {
             }
           }} />
           <div style={{ marginTop: 12 }}>
-            <button onClick={() => setView('login')}>Back to sign in</button>
+            <button onClick={() => setView('login')}>Вернуться к авторизации</button>
           </div>
         </div>
       )}

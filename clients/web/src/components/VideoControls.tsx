@@ -71,7 +71,7 @@ export default function VideoControls({ onPrev, onNext, onLike, onAccount, onTog
         onClick={() => { onAccount?.(); emit('app:account') }}
         style={buttonStyle}
       >
-        Acc
+        Аккаунт
       </button>
 
       {/* LIKE BUTTON + COUNTER */}

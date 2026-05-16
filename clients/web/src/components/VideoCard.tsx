@@ -123,7 +123,7 @@ const VideoCard = forwardRef<VideoCardHandle, Props>(
         likes={likes} // pass the updated localLikes
       />*/}
       <div className="meta">
-        <div className="author">@{video.author ?? 'unknown'}</div>
+        <div className="author">@{video.author ?? 'неизвестный'}</div>
         <div className="caption">{video.caption ?? ''}</div>
       </div>
     </div>
