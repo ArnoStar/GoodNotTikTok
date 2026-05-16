@@ -1,7 +1,6 @@
 import {
   useRef,
   useEffect,
-  useState,
   forwardRef,
   useImperativeHandle
 } from 'react'
@@ -16,67 +15,23 @@ type Props = {
   }
 
   active: boolean
-
-  onLike?: () => void
-  onDislike?: () => void
-
-  onNext?: () => void
-  onPrev?: () => void
-
-  onAccount?: () => void
-
   likes?: number
 }
 
 export type VideoCardHandle = {
   play: () => Promise<void>
   pause: () => void
-
   toggleMute: () => void
-
-  setMuted: (m: boolean) => void
-
   isMuted: () => boolean
-
-  like: () => void
-
-  next: () => void
-  prev: () => void
-
-  account: () => void
 }
 
-const VideoCard = forwardRef<
-  VideoCardHandle,
-  Props
->(
+const VideoCard = forwardRef<VideoCardHandle, Props>(
 (
-  {
-    video,
-    active,
-    onLike,
-    onDislike,
-    onNext,
-    onPrev,
-    onAccount,
-    likes
-  },
+  { video, active },
   ref
 ) => {
   const navigate = useNavigate()
-
-  const vref =
-    useRef<HTMLVideoElement | null>(null)
-
-  const [muted, setMuted] =
-    useState(false)
-
-  const [localLikes, setLocalLikes] =
-    useState(likes ?? 0)
-
-  useEffect(() => {
-    setLocalLikes(likes ?? 0)
-  }, [likes])
+  const vref = useRef<HTMLVideoElement | null>(null)
 
   useImperativeHandle(ref, () => ({
     play: async () => {
@@ -91,49 +46,11 @@ const VideoCard = forwardRef<
 
     toggleMute: () => {
       if (!vref.current) return
-
-      vref.current.muted =
-        !vref.current.muted
-
-      setMuted(vref.current.muted)
-    },
-
-    setMuted: (m: boolean) => {
-      if (!vref.current) return
-
-      vref.current.muted = m
-
-      setMuted(m)
+      vref.current.muted = !vref.current.muted
     },
 
     isMuted: () => {
       return !!vref.current?.muted
-    },
-
-    like: () => {
-      onLike?.()
-
-      setLocalLikes((l) => l + 1)
-    },
-
-    dislike: () => {
-      onDislike?.()
-
-      setLocalLikes((l) =>
-        Math.max(0, l - 1)
-      )
-    },
-
-    next: () => {
-      onNext?.()
-    },
-
-    prev: () => {
-      onPrev?.()
-    },
-
-    account: () => {
-      onAccount?.()
     }
   }))
 
@@ -148,17 +65,12 @@ const VideoCard = forwardRef<
     el.load()
 
     if (active) {
-      const p = el.play()
-      if (p) p.catch(() => {})
+      el.play().catch(() => {})
     }
   }, [active, video.id])
 
   return (
-    <div
-      className={`video-card ${
-        active ? 'active' : ''
-      }`}
-    >
+    <div className={`video-card ${active ? 'active' : ''}`}>
       <video
         ref={vref}
         loop
@@ -174,24 +86,13 @@ const VideoCard = forwardRef<
 
       <div className="meta">
         <div
-          className="author"
-          onClick={() =>
-            navigate(
-              `/profile/${video.id}`
-            )
-          }
+          onClick={() => navigate(`/profile/${video.id}`)}
           style={{ cursor: 'pointer' }}
         >
           @{video.author ?? 'unknown'}
         </div>
 
-        <div className="caption">
-          {video.caption ?? ''}
-        </div>
-
-        <div>
-          ❤️ {localLikes}
-        </div>
+        <div>{video.caption}</div>
       </div>
     </div>
   )
