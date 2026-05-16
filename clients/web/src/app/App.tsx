@@ -12,6 +12,7 @@ import SignupPage from '../pages/SignupPage'
 import ConfirmPage from '../pages/ConfirmPage'
 import FeedPage from '../pages/FeedPage'
 import UploadPage from '../pages/UploadPage'
+import ProfilePage from '../pages/ProfilePage'
 
 function ProtectedRoute({
   children
@@ -59,6 +60,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <UploadPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile/:user_id"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

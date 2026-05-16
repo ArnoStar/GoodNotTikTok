@@ -5,6 +5,7 @@ import {
   forwardRef,
   useImperativeHandle
 } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 type Props = {
   video: {
@@ -62,6 +63,7 @@ const VideoCard = forwardRef<
   },
   ref
 ) => {
+  const navigate = useNavigate()
 
   const vref =
     useRef<HTMLVideoElement | null>(null)
@@ -137,52 +139,19 @@ const VideoCard = forwardRef<
 
   useEffect(() => {
     const el = vref.current
-
     if (!el) return
 
-    const streamUrl =
-      `/stream/${video.id}.mp4`
+    const src = `/stream/${video.id}.mp4`
+
+    el.pause()
+    el.src = src
+    el.load()
 
     if (active) {
-      el.muted = muted
-
-      el.src = streamUrl
-
-      try {
-        el.preload = 'auto'
-
-        el.load()
-      } catch {}
-
-      el.play().catch(() => {})
-    } else {
-      try {
-        el.pause()
-      } catch {}
-
-      try {
-        el.removeAttribute('src')
-
-        el.load()
-      } catch {}
+      const p = el.play()
+      if (p) p.catch(() => {})
     }
-
-    return () => {
-      try {
-        el.pause()
-      } catch {}
-
-      try {
-        el.removeAttribute('src')
-
-        el.load()
-      } catch {}
-    }
-  }, [
-    active,
-    video.id,
-    muted
-  ])
+  }, [active, video.id])
 
   return (
     <div
@@ -204,7 +173,15 @@ const VideoCard = forwardRef<
       />
 
       <div className="meta">
-        <div className="author">
+        <div
+          className="author"
+          onClick={() =>
+            navigate(
+              `/profile/${video.id}`
+            )
+          }
+          style={{ cursor: 'pointer' }}
+        >
           @{video.author ?? 'unknown'}
         </div>
 
