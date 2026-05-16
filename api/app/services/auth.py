@@ -9,6 +9,7 @@ from app.db.database_redis import redis
 from app.core.security import hash_password
 from app.core.config import settings
 from app.services.email import send_confirmation_email
+from app.shemas.auth import ConfirmationIn
 
 from random import randint
 from sqlalchemy.orm import Session
@@ -64,18 +65,26 @@ async def add_email_to_confirmation(email:str, password_hash:str, code:int):
     user_info = {"code":code,"password_hash":password_hash, "email":email}
     await redis.set(name = email, value = json.dumps(user_info), ex=REGISTER_EXPIRATION_TIME)
 
-'''
-async def valid_email(confirmation:ConfirmationCode, db:Session = Depends(get_db)):
+async def add_email_to_confirmation_reset(email:str, code:int):
+    user_info = {"code":code, "email":email}
+    await redis.set(name = email, value = json.dumps(user_info), ex=REGISTER_EXPIRATION_TIME)
+
+async def verify_validation_code(confirmation:ConfirmationIn) -> dict[str:str]:
     user_info = await redis.get(confirmation.email)
     if user_info is None:
         raise HTTPException(401, "Email not signed in")
     user_info = json.loads(user_info)
     if user_info["code"] != confirmation.code:
         raise HTTPException(401, "Wrong code")
+    
+    return user_info
 
-    user = create_user(confirmation.email, user_info["password_hash"], db)
+def change_password(new_password:str, user_info: dict = Depends(verify_validation_code), db:Session = Depends(get_db)):
+    user = get_user(user_info["email"], db)
+    new_hash_password = hash_password(new_password)
 
-    await redis.delete(user.email)
+    user.password_hash = new_hash_password
+    db.commit()
+    db.refresh(user)
 
     return user
-'''
