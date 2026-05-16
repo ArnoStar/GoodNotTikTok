@@ -67,7 +67,7 @@ const VideoCard = forwardRef<
     useRef<HTMLVideoElement | null>(null)
 
   const [muted, setMuted] =
-    useState(true)
+    useState(false)
 
   const [localLikes, setLocalLikes] =
     useState(likes ?? 0)
