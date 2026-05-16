@@ -76,15 +76,15 @@ function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="login-form" style={{color: '#fff'}}>
-      <h2>Sign in</h2>
+      <h2>Завести аккаунт</h2>
       <div>
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input placeholder="Электронная почта" value={email} onChange={e => setEmail(e.target.value)} />
       </div>
       <div>
-        <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <input placeholder="Пароль" type="password" value={password} onChange={e => setPassword(e.target.value)} />
       </div>
       <div>
-        <button type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Log in'}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Вход в систему...' : 'Авторизоваться'}</button>
       </div>
       {error && <div style={{color: 'salmon'}}>{error}</div>}
     </form>
@@ -115,10 +115,10 @@ function SignUpForm({ onSigned }: { onSigned: (email: string, password: string) 
         const txt = await res.text()
         throw new Error(txt || 'Signup failed')
       }
-      setOkMsg('Signed up. Check your email for confirmation code.')
+      setOkMsg('Зарегистрирован. Проверьте свою электронную почту на наличие кода подтверждения.')
       onSigned(email, password)
     } catch (err) {
-      setError((err as Error).message || 'Signup failed')
+      setError((err as Error).message || 'Регистрация не удалась')
     } finally {
       setLoading(false)
     }
@@ -128,16 +128,16 @@ function SignUpForm({ onSigned }: { onSigned: (email: string, password: string) 
     <form onSubmit={onSubmit} className="login-form" style={{ color: '#fff' }}>
       <h2>Sign up</h2>
       <div>
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input placeholder="Электронная почта" value={email} onChange={e => setEmail(e.target.value)} />
       </div>
       <div>
-        <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <input placeholder="Пароль" type="password" value={password} onChange={e => setPassword(e.target.value)} />
       </div>
       <div>
-        <input placeholder="Confirm password" type="password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} />
+        <input placeholder="Подтвердите пароль" type="password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} />
       </div>
       <div>
-        <button type="submit" disabled={loading}>{loading ? 'Signing...' : 'Sign up'}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Подписание...' : 'Зарегистрироваться'}</button>
       </div>
       {okMsg && <div style={{ color: 'lightgreen' }}>{okMsg}</div>}
       {error && <div style={{ color: 'salmon' }}>{error}</div>}
@@ -170,12 +170,12 @@ function ConfirmForm({ email, onConfirmed }: { email?: string; onConfirmed?: () 
       })
       if (!res.ok) {
         const txt = await res.text()
-        throw new Error(txt || 'Confirmation failed')
+        throw new Error(txt || 'Подтверждение не удалось')
       }
-      setOkMsg('Account confirmed. You can now sign in.')
+      setOkMsg('Учетная запись подтверждена. Теперь вы можете войти в систему.')
       onConfirmed && onConfirmed()
     } catch (err) {
-      setError((err as Error).message || 'Confirmation failed')
+      setError((err as Error).message || 'Подтверждение не удалось')
     } finally {
       setLoading(false)
     }
@@ -185,13 +185,13 @@ function ConfirmForm({ email, onConfirmed }: { email?: string; onConfirmed?: () 
     <form onSubmit={onSubmit} className="login-form" style={{ color: '#fff' }}>
       <h2>Confirm account</h2>
       <div>
-        <input placeholder="Email" value={addr} onChange={e => setAddr(e.target.value)} />
+        <input placeholder="Электронная почта" value={addr} onChange={e => setAddr(e.target.value)} />
       </div>
       <div>
-        <input placeholder="Confirmation code" value={code} onChange={e => setCode(e.target.value)} />
+        <input placeholder="Код подтверждения" value={code} onChange={e => setCode(e.target.value)} />
       </div>
       <div>
-        <button type="submit" disabled={loading}>{loading ? 'Confirming...' : 'Confirm'}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Подтверждение...' : 'Подтверждать'}</button>
       </div>
       {okMsg && <div style={{ color: 'lightgreen' }}>{okMsg}</div>}
       {error && <div style={{ color: 'salmon' }}>{error}</div>}
