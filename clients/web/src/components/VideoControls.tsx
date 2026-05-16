@@ -1,114 +1,170 @@
 type Props = {
   onPrev?: () => void
   onNext?: () => void
+
   onLike?: () => void
+
   onAccount?: () => void
+
   onToggleMute?: () => void
+
   isMuted?: boolean
+
   likes?: number
+
   liked?: boolean
 }
 
-export default function VideoControls({ onPrev, onNext, onLike, onAccount, onToggleMute, isMuted, likes, liked}: Props) {
-  const emit = (name: string) => {
-    try { window.dispatchEvent(new Event(name)) } catch {}
-  }
+export default function VideoControls({
+  onPrev,
+  onNext,
+  onLike,
+  onAccount,
+  onToggleMute,
+  isMuted,
+  likes,
+  liked
+}: Props) {
 
-  console.log(likes)
+  const emit = (name: string) => {
+    try {
+      window.dispatchEvent(
+        new Event(name)
+      )
+    } catch {}
+  }
 
   const buttonStyle = {
     width: 50,
     height: 50,
+
     borderRadius: '50%',
+
     border: 'none',
-    backgroundColor: '#1b1f24ff',
+
+    backgroundColor:
+      '#1b1f24',
+
     color: 'white',
+
     cursor: 'pointer',
-    display: 'flex',           // enable flex
-    justifyContent: 'center',  // center horizontally
-    alignItems: 'center',      // center vertically
-    fontSize: '20px',          // optional: make the emoji bigger
-    lineHeight: 1
+
+    display: 'flex',
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+
+    fontSize: '20px'
   } as const
 
   return (
-    <div style={{position: "relative", display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, zIndex: 10, left:210, top:-150}}>
+    <div
+      style={{
+        position: 'fixed',
+
+        right: 20,
+
+        bottom: 120,
+
+        display: 'flex',
+
+        flexDirection: 'column',
+
+        gap: 12,
+
+        zIndex: 100
+      }}
+    >
+
+      {/* MUTE */}
+
       <button
         onClick={() => {
           onToggleMute?.()
-          emit('app:toggleMute')
 
-          try {
-            const videos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[]
-            if (videos.length) {
-              const currentMuted = videos[0].muted
-              const newMuted = !currentMuted
-              videos.forEach(v => {
-                try { v.muted = newMuted } catch {}
-                if (!newMuted) v.play().catch(() => {})
-              })
-            }
-          } catch {}
+          emit('app:toggleMute')
         }}
-        style={{width: 50,
-                height: 50,
-                borderRadius: '50%',
-                border: 'none',
-                backgroundColor: '#1b1f24ff',
-                color: 'white',
-                cursor: 'pointer',
-                margin: '150px',
-                display: 'flex',           // enable flex
-                justifyContent: 'center',  // center horizontally
-                alignItems: 'center',      // center vertically
-                fontSize: '20px', 
-              }}
+        style={buttonStyle}
       >
         {isMuted ? '🔈' : '🔊'}
       </button>
 
+      {/* ACCOUNT */}
+
       <button
-        onClick={() => { onAccount?.(); emit('app:account') }}
+        onClick={() => {
+          onAccount?.()
+
+          emit('app:account')
+        }}
         style={buttonStyle}
       >
-        Аккаунт
+        👤
       </button>
 
-      {/* LIKE BUTTON + COUNTER */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      {/* LIKE */}
+
+      <div
+        style={{
+          display: 'flex',
+
+          flexDirection: 'column',
+
+          alignItems: 'center',
+
+          gap: 5
+        }}
+      >
         <button
-          onClick={() => { onLike?.(); emit('app:like') }}
+          onClick={() => {
+            onLike?.()
+
+            emit('app:like')
+          }}
           style={{
-            width: 50,
-            height: 50,
-            borderRadius: '50%',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            display: 'flex',           // enable flex
-            justifyContent: 'center',  // center horizontally
-            alignItems: 'center',      // center vertically
-            fontSize: '20px',
-            backgroundColor: liked ? '#007b55' : '#1b1f24ff'
+            ...buttonStyle,
+
+            backgroundColor:
+              liked
+                ? '#0f9d58'
+                : '#1b1f24'
           }}
         >
           ❤️
         </button>
 
-        <span style={{ color: 'black', fontSize: 14 }}>
-          {likes}
+        <span
+          style={{
+            color: 'white',
+            fontSize: 14
+          }}
+        >
+          {likes ?? 0}
         </span>
       </div>
 
+      {/* PREV */}
+
       <button
-        onClick={() => { onPrev?.(); emit('app:prev') }}
+        onClick={() => {
+          onPrev?.()
+
+          emit('app:prev')
+        }}
         style={buttonStyle}
       >
         ⬆
       </button>
 
+      {/* NEXT */}
+
       <button
-        onClick={() => { onNext?.(); emit('app:next') }}
+        onClick={() => {
+          onNext?.()
+
+          emit('app:next')
+        }}
         style={buttonStyle}
       >
         ⬇

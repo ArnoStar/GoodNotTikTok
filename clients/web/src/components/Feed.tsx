@@ -1,50 +1,63 @@
 import { useState, useEffect, useRef } from 'react'
 import VideoCard from './VideoCard'
 import type { VideoCardHandle } from './VideoCard'
-import { useAuth } from '../App'
+import { useAuth } from '../context/AuthContext'
 import VideoControls from './VideoControls'
 
 type Video = {
   id: string
   url?: string
-  added_by?: { id: number }
+  added_by?: {
+    id: number
+  }
   caption?: string
   likes?: number
   liked?: boolean
 }
 
-export type FeedHandle = {
-  prev: () => void
-  next: () => void
-  toggleMute: () => void
-  like: () => void
-  isMuted: () => boolean
-}
-
 export default function Feed() {
   const [videos, setVideos] = useState<Video[]>([])
   const [index, setIndex] = useState(0)
+
   const auth = useAuth()
+
   const vcRef = useRef<VideoCardHandle | null>(null)
+
   const [muted, setMuted] = useState(true)
 
-  // Fetch one random video
   async function fetchVideo(): Promise<Video | null> {
     try {
       const res = await fetch('/api/video/')
-      if (!res.ok) return null
+
+      if (!res.ok) {
+        return null
+      }
+
       const v = await res.json()
 
-      // get likes
-      const likeRes = await fetch(`/api/video/${v.id}/like`)
-      const likes = likeRes.ok ? Number(await likeRes.json()) : 0
+      // likes count
+      const likeRes = await fetch(
+        `/api/video/${v.id}/like`
+      )
 
-      const likedRes = await fetch(`/api/video/${v.id}/like_state`, {
-            method: 'GET',
-            headers: { Authorization: `Bearer ${auth.token}` }
-          })
+      const likes = likeRes.ok
+        ? Number(await likeRes.json())
+        : 0
 
-      const liked = likeRes.ok ? Boolean(await likedRes.json()) : false
+      // liked state
+      const likedRes = await fetch(
+        `/api/video/${v.id}/like_state`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${auth.token}`
+          }
+        }
+      )
+
+      const liked = likedRes.ok
+        ? Boolean(await likedRes.json())
+        : false
 
       return {
         id: v.id,
@@ -58,141 +71,242 @@ export default function Feed() {
     }
   }
 
-  // Load initial buffer (5 videos)
   async function loadInitial() {
     const arr: Video[] = []
+
     const ids = new Set()
 
     while (arr.length < 5) {
       const v = await fetchVideo()
-      if (!v || ids.has(v.id)) continue
-      
+
+      if (!v) continue
+
+      if (ids.has(v.id)) continue
+
       ids.add(v.id)
-      arr.push(v) 
+
+      arr.push(v)
     }
 
     setVideos(arr)
-    setIndex(2) // start in the middle
+
+    setIndex(2)
   }
 
   useEffect(() => {
     loadInitial()
   }, [])
 
-  // Scroll wheel navigation
+  // mouse wheel navigation
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
-      if (e.deltaY > 0) next()
-      else prev()
+      if (e.deltaY > 0) {
+        next()
+      } else {
+        prev()
+      }
     }
 
     window.addEventListener('wheel', onWheel)
-    return () => window.removeEventListener('wheel', onWheel)
+
+    return () => {
+      window.removeEventListener(
+        'wheel',
+        onWheel
+      )
+    }
   }, [index, videos])
 
   async function like(id: string) {
     if (!auth.token) return
 
-    setVideos(v =>
-      v.map(video => {
-        if (video.id !== id) return video
+    setVideos((prev) =>
+      prev.map((video) => {
+        if (video.id !== id) {
+          return video
+        }
 
-        const alreadyLiked = video.liked
+        const alreadyLiked =
+          video.liked
 
         if (alreadyLiked) {
-          fetch(`/api/video/${id}/dislike`, {
-            method: 'PUT',
-            headers: { Authorization: `Bearer ${auth.token}` }
-          })
+          fetch(
+            `/api/video/${id}/dislike`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization:
+                  `Bearer ${auth.token}`
+              }
+            }
+          )
 
           return {
             ...video,
             liked: false,
-            likes: Math.max(0, (video.likes ?? 0) - 1)
+            likes: Math.max(
+              0,
+              (video.likes ?? 0) - 1
+            )
           }
         }
 
-        fetch(`/api/video/${id}/like`, {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${auth.token}` }
-        })
+        fetch(
+          `/api/video/${id}/like`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization:
+                `Bearer ${auth.token}`
+            }
+          }
+        )
 
         return {
           ...video,
           liked: true,
-          likes: (video.likes ?? 0) + 1
+          likes:
+            (video.likes ?? 0) + 1
         }
       })
     )
   }
 
-
   function prev() {
-    setIndex(i => Math.max(0, i - 1))
+    setIndex((i) =>
+      Math.max(0, i - 1)
+    )
   }
 
   async function next() {
     if (index < 2) {
-      setIndex(i => Math.min(videos.length - 1, i + 1))
+      setIndex((i) =>
+        Math.min(
+          videos.length - 1,
+          i + 1
+        )
+      )
+
       return
     }
 
-    const newVideo = await fetchVideo()
+    const newVideo =
+      await fetchVideo()
+
     if (!newVideo) return
 
-    setVideos(prev => {
-      const updated = [...prev.slice(1), newVideo]
-      return updated
+    setVideos((prev) => {
+      return [
+        ...prev.slice(1),
+        newVideo
+      ]
     })
-    
+
     setIndex(2)
   }
 
-  // Global controls
+  // global controls
   useEffect(() => {
     const onPrev = () => prev()
+
     const onNext = () => next()
 
     const onToggleMute = () => {
       const current = vcRef.current
+
       if (!current) return
-      current.toggleMute?.()
-      const isMuted = current.isMuted?.() ?? true
+
+      current.toggleMute()
+
+      const isMuted =
+        current.isMuted()
+
       setMuted(isMuted)
     }
 
     const onLike = () => {
-      const id = videos[index]?.id
-      if (id) like(id)
+      const id =
+        videos[index]?.id
+
+      if (id) {
+        like(id)
+      }
     }
 
-    window.addEventListener('app:prev', onPrev)
-    window.addEventListener('app:next', onNext)
-    window.addEventListener('app:toggleMute', onToggleMute)
-    window.addEventListener('app:like', onLike)
+    window.addEventListener(
+      'app:prev',
+      onPrev
+    )
+
+    window.addEventListener(
+      'app:next',
+      onNext
+    )
+
+    window.addEventListener(
+      'app:toggleMute',
+      onToggleMute
+    )
+
+    window.addEventListener(
+      'app:like',
+      onLike
+    )
 
     return () => {
-      window.removeEventListener('app:prev', onPrev)
-      window.removeEventListener('app:next', onNext)
-      window.removeEventListener('app:toggleMute', onToggleMute)
-      window.removeEventListener('app:like', onLike)
+      window.removeEventListener(
+        'app:prev',
+        onPrev
+      )
+
+      window.removeEventListener(
+        'app:next',
+        onNext
+      )
+
+      window.removeEventListener(
+        'app:toggleMute',
+        onToggleMute
+      )
+
+      window.removeEventListener(
+        'app:like',
+        onLike
+      )
     }
   }, [videos, index])
 
   return (
     <div className="feed">
-
       {videos.map((v, i) => (
         <VideoCard
           key={`${v.id}-${i}`}
-          ref={i === index ? vcRef : null}
-          video={{ ...v, url: v.url || `/stream/${v.id}.mp4` }}
+          ref={
+            i === index
+              ? vcRef
+              : null
+          }
+          video={{
+            ...v,
+            url:
+              v.url ||
+              `/stream/${v.id}.mp4`
+          }}
           active={i === index}
           onLike={() => like(v.id)}
-          likes={videos[index]?.likes ?? 0}
+          likes={v.likes ?? 0}
         />
       ))}
-      <VideoControls isMuted={muted} liked={videos[index]?.liked} likes={videos[index]?.likes ?? 0 } />
+
+      <VideoControls
+        isMuted={muted}
+        liked={
+          videos[index]?.liked
+        }
+        likes={
+          videos[index]?.likes ?? 0
+        }
+      />
     </div>
   )
 }
