@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useSearchParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 
 type UserProfile = {
@@ -15,12 +13,9 @@ type Video = {
 }
 
 export default function ProfilePage() {
-  const [_, setSearchParams] = useSearchParams()
-
   const navigate = useNavigate()
 
   const { user_id } = useParams()
-  const { token } = useAuth()
 
   const [profile, setProfile] =
     useState<UserProfile | null>(null)
