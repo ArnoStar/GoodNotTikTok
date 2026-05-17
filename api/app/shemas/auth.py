@@ -20,3 +20,9 @@ class UserSignIn(BaseModel):
 class ConfirmationIn(BaseModel):
     code:str
     email:str
+
+class PasswordResetRequest(BaseModel):
+    email:str
+
+class NewPassword(BaseModel):
+    password:str

@@ -5,7 +5,7 @@ from app.core.config import settings
 from app.db.models import User
 from app.db.database_sql import get_db
 from app.db.database_redis import redis
-from app.shemas.auth import UserSignIn
+from app.shemas.auth import UserSignIn, PasswordResetRequest
 from app.deps.auth import verify_credentials, verify_new_user_information, verify_validation_code, get_current_user
 from app.services.auth import create_token, generate_random_code, create_user, add_email_to_confirmation, add_email_to_confirmation_reset, get_user, change_password
 from app.services.email import send_confirmation_email
@@ -35,10 +35,10 @@ async def confirm(user_info: dict = Depends(verify_validation_code), db:Session 
     return user
 
 @router.post("/reset_password")
-async def reset_password(email:str):
+async def reset_password(password_request_info:PasswordResetRequest):
     confirmation_code = generate_random_code()
-    await add_email_to_confirmation_reset(email, confirmation_code)
-    await send_confirmation_email(email, confirmation_code)
+    await add_email_to_confirmation_reset(password_request_info.email, confirmation_code)
+    await send_confirmation_email(password_request_info.email, confirmation_code)
 
 @router.post("/confirm_reset_password")
 async def confirm_reset_password(user_info = Depends(change_password)):
