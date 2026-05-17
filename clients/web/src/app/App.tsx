@@ -4,6 +4,10 @@ import {
   Route,
   Navigate
 } from 'react-router-dom'
+import {
+  useEffect,
+  useState
+} from 'react'
 
 import { AuthProvider, useAuth } from '../context/AuthContext'
 
@@ -21,10 +25,84 @@ function ProtectedRoute({
 }: {
   children: React.ReactNode
 }) {
-  const { token } = useAuth()
+  const { token, logout } = useAuth()
 
-  if (!token) {
-    return <Navigate to="/login" replace />
+  const [loading, setLoading] =
+    useState(true)
+
+  const [authorized, setAuthorized] =
+    useState(false)
+
+  useEffect(() => {
+    async function checkAuth() {
+      // no token
+      if (!token) {
+        setAuthorized(false)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const res = await fetch(
+          '/api/auth/me',
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`
+            }
+          }
+        )
+
+        // invalid token
+        if (res.status === 401) {
+          logout?.()
+
+          setAuthorized(false)
+          setLoading(false)
+
+          return
+        }
+
+        // success
+        if (res.ok) {
+          setAuthorized(true)
+        } else {
+          setAuthorized(false)
+        }
+
+      } catch {
+        setAuthorized(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [token])
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          height: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: 'white'
+        }}
+      >
+        Loading...
+      </div>
+    )
+  }
+
+  if (!authorized) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    )
   }
 
   return children
