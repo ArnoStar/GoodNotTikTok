@@ -12,6 +12,8 @@ class User(Base):
     email = Column(String, index=True, unique=True)
     password_hash = Column(String)
 
+    image = Column(String, default=None, nullable=True)
+
     playlist_link = relationship("UserPlayList", back_populates="user")
 
     music_added = relationship("Music", back_populates="added_by")

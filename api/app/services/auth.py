@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.shemas.auth import UserSignIn
-from app.db.models import User
+from app.db.models import User, Video
 from app.db.database_sql import get_db
 from app.db.database_redis import redis
 from app.core.security import hash_password
@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import json
+import string
+import random
 
 oauth2shema = OAuth2PasswordBearer("/auth/login")
 
@@ -88,3 +90,26 @@ def change_password(new_password:NewPassword, user_info: dict = Depends(verify_v
     db.refresh(user)
 
     return user
+
+def generate_useable_id(db: Session) -> str:
+    video = True
+    charset = string.ascii_letters + string.digits  # A-Z a-z 0-9
+    while video:
+        id = "".join(random.choices(charset, k=16))
+        video = db.query(Video).filter(Video.id == id).first()
+    return id
+
+def add_profile_pic(user, img, db):
+    ALLOWED_MIME_TYPES = {"image/png", "image/jpeg"}
+    if img.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Unsupported file type: {img.content_type}. Only PNG and JPG/JPEG are allowed."
+        )
+    
+    frmt = img.filename.split(".")[-1]
+    img.filename = f"{generate_useable_id(db)}.{frmt}"
+
+    user.image = img.filename
+    db.commit()
+    return img
