@@ -95,13 +95,22 @@ export default function ProfilePage() {
 
       setFollowers(followersArray.length)
 
-      // CHECK FOLLOWING (use stored meData, NOT refetch)
+      // CHECK FOLLOW STATE
       if (meData) {
-        const followed = followersArray.some(
-          (f: any) => f.id === meData.id
+        const followStateRes = await fetch(
+          `/api/video/profile/${user_id}/follow_state`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
         )
 
-        setIsFollowing(followed)
+        if (followStateRes.ok) {
+          const state = await followStateRes.json()
+
+          setIsFollowing(Boolean(state))
+        }
       }
 
       // FOLLOWINGS
@@ -249,6 +258,22 @@ export default function ProfilePage() {
         paddingBottom: 50
       }}
     >
+      <div
+        style={{
+          position: 'fixed',
+          top: 20,
+          left: 20,
+          zIndex: 9999
+        }}
+      >
+        <button
+          onClick={() =>
+            navigate('/')
+          }
+        >
+          Go Back
+        </button>
+      </div>
 
       {/* POPUP */}
 
@@ -397,15 +422,14 @@ export default function ProfilePage() {
 
         {/* BUTTON */}
 
-        {isOwnProfile ? (
+        {token && isOwnProfile ? (
           <button
             onClick={() =>
               setShowUploadPopup(true)
             }
             style={{
               marginBottom: 20,
-              padding:
-                '10px 20px',
+              padding: '10px 20px',
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer'
@@ -413,7 +437,7 @@ export default function ProfilePage() {
           >
             Change profile picture
           </button>
-        ) : (
+        ) : token && !isOwnProfile ? (
           <button
             onClick={() => {
               if (isFollowing) {
@@ -424,21 +448,14 @@ export default function ProfilePage() {
             }}
             style={{
               marginBottom: 20,
-
-              padding:
-                '10px 20px',
-
+              padding: '10px 20px',
               borderRadius: 12,
-
               border: 'none',
-
               cursor: 'pointer',
-
               background:
                 isFollowing
                   ? '#333'
                   : '#0f9d58',
-
               color: 'white'
             }}
           >
@@ -446,7 +463,7 @@ export default function ProfilePage() {
               ? 'Unfollow'
               : 'Follow'}
           </button>
-        )}
+        ) : null}
 
         {/* FOLLOW STATS */}
 
