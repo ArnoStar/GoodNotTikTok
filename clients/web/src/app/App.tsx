@@ -13,6 +13,8 @@ import ConfirmPage from '../pages/ConfirmPage'
 import FeedPage from '../pages/FeedPage'
 import UploadPage from '../pages/UploadPage'
 import ProfilePage from '../pages/ProfilePage'
+import ResetPasswordPage from '../pages/ResetPasswordPage'
+import ConfirmResetPasswordPage from '../pages/ConfirmResetPasswordPage'
 
 function ProtectedRoute({
   children
@@ -71,6 +73,16 @@ function AppRoutes() {
             <ProfilePage />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+        path="/reset-password"
+        element={<ResetPasswordPage />}
+      />
+
+      <Route
+        path="/confirm-reset-password"
+        element={<ConfirmResetPasswordPage />}
       />
     </Routes>
   )
