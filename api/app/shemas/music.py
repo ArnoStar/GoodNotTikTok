@@ -10,3 +10,4 @@ class CommentPost(BaseModel):
 class ProfileGet(BaseModel):
     id:int
     email:str
+    img:str
