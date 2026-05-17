@@ -171,5 +171,11 @@ def unfollow(follower:User, following:User, db:Session) -> Follow:
     db.commit()
     return fol
 
+def is_following(follower:User, following:User, db:Session) -> bool:
+    fol = db.query(Follow).filter(Follow.follower == follower, Follow.following == following).first()
+    if fol:
+        return True
+    return False
+
 def get_random_video(db:Session) -> Video:
     return db.query(Video).order_by(func.random()).first()

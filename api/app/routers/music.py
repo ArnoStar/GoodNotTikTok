@@ -7,7 +7,7 @@ from app.shemas.music import CommentPost, ProfileGet
 from app.deps.auth import get_current_user
 from app.services.music import (add_music, get_metadata_music, verify_video, download_video, generate_useable_id, add_metadata_video, get_metadata_video,
                                 like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video,
-                                get_like_state, get_users_videos)
+                                get_like_state, get_users_videos, is_following)
 from app.services.auth import get_user_by_id
 from app.core.config import settings
 
@@ -89,3 +89,8 @@ def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Sessio
 def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
     profile = get_user_by_id(user_id, db)
     return unfollow(user, profile, db)
+
+@router.put("/profile/{user_id}/follow_state")
+def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    profile = get_user_by_id(user_id, db)
+    return is_following(user, profile, db)
