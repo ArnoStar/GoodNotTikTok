@@ -90,7 +90,7 @@ def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Sessio
     profile = get_user_by_id(user_id, db)
     return unfollow(user, profile, db)
 
-@router.put("/profile/{user_id}/follow_state")
+@router.get("/profile/{user_id}/follow_state")
 def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
     profile = get_user_by_id(user_id, db)
     return is_following(user, profile, db)
