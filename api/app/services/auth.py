@@ -81,7 +81,7 @@ async def verify_validation_code(confirmation:ConfirmationIn) -> dict[str:str]:
 
 def change_password(new_password:NewPassword, user_info: dict = Depends(verify_validation_code), db:Session = Depends(get_db)):
     user = get_user(user_info["email"], db)
-    new_hash_password = hash_password(new_password)
+    new_hash_password = hash_password(new_password.password)
 
     user.password_hash = new_hash_password
     db.commit()
