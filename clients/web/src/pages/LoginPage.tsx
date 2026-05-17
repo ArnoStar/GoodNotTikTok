@@ -13,6 +13,18 @@ export default function LoginPage() {
       <Link to="/signup">
         Sign up
       </Link>
+
+      <div
+        onClick={() =>
+          navigate('/reset-password')
+        }
+        style={{
+          cursor: 'pointer',
+          color: '#4da6ff'
+        }}
+      >
+        Forgot password?
+      </div>
     </div>
   )
 }

@@ -9,7 +9,7 @@ from app.db.database_redis import redis
 from app.core.security import hash_password
 from app.core.config import settings
 from app.services.email import send_confirmation_email
-from app.shemas.auth import ConfirmationIn
+from app.shemas.auth import ConfirmationIn, NewPassword
 
 from random import randint
 from sqlalchemy.orm import Session
@@ -79,7 +79,7 @@ async def verify_validation_code(confirmation:ConfirmationIn) -> dict[str:str]:
     
     return user_info
 
-def change_password(new_password:str, user_info: dict = Depends(verify_validation_code), db:Session = Depends(get_db)):
+def change_password(new_password:NewPassword, user_info: dict = Depends(verify_validation_code), db:Session = Depends(get_db)):
     user = get_user(user_info["email"], db)
     new_hash_password = hash_password(new_password)
 
