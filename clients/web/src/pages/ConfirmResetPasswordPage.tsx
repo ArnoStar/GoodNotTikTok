@@ -16,7 +16,7 @@ export default function ConfirmResetPasswordPage() {
       setLoading(true)
 
       const res = await fetch(
-        '/auth/confirm_reset_password',
+        '/api/auth/confirm_reset_password',
         {
           method: 'POST',
           headers: {
