@@ -1,5 +1,7 @@
 venv
+alembic.ini
 __pycache__/
+alembic/
 .env
 .python-version
 *.db

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.core.security import hash_password
 from app.core.config import settings
@@ -7,8 +7,9 @@ from app.db.database_sql import get_db
 from app.db.database_redis import redis
 from app.shemas.auth import UserSignIn, PasswordResetRequest
 from app.deps.auth import verify_credentials, verify_new_user_information, verify_validation_code, get_current_user
-from app.services.auth import create_token, generate_random_code, create_user, add_email_to_confirmation, add_email_to_confirmation_reset, get_user, change_password
+from app.services.auth import create_token, generate_random_code, create_user, add_email_to_confirmation, add_email_to_confirmation_reset, get_user, change_password, add_profile_pic
 from app.services.email import send_confirmation_email
+from app.services.music import download_video
 
 from sqlalchemy.orm import Session
 
@@ -43,6 +44,11 @@ async def reset_password(password_request_info:PasswordResetRequest):
 @router.post("/confirm_reset_password")
 async def confirm_reset_password(user_info = Depends(change_password)):
     return user_info
+
+@router.post("/change_profile_picture", response_model=None)
+def chg_profil_pic(user = Depends(get_current_user), img:UploadFile = File(...), db = Depends(get_db)):
+    img = add_profile_pic(user, img, db)
+    download_video(img)
 
 
 @router.get("/me")
