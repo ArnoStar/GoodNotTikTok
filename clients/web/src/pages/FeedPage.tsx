@@ -52,7 +52,12 @@ export default function FeedPage() {
   }, [token])
 
   return (
-    <div>
+    <div
+      style={{
+        background: '#0f1115',
+        minHeight: '100vh'
+      }}
+    >
 
       {/* PROFILE BUTTON */}
 
@@ -73,20 +78,25 @@ export default function FeedPage() {
             )
           }}
           style={{
-            width: 55,
-            height: 55,
+            width: 60,
+            height: 60,
 
             borderRadius: '50%',
 
             overflow: 'hidden',
 
-            border: '2px solid white',
+            border: '2px solid #4da6ff',
 
             padding: 0,
 
             cursor: 'pointer',
 
-            background: '#111'
+            background: '#1b1f24',
+
+            boxShadow:
+              '0 4px 15px rgba(0,0,0,0.4)',
+
+            transition: '0.2s'
           }}
         >
           {me?.image ? (
@@ -110,7 +120,7 @@ export default function FeedPage() {
                 alignItems: 'center',
 
                 color: 'white',
-                fontSize: 24
+                fontSize: 26
               }}
             >
               👤
@@ -124,7 +134,7 @@ export default function FeedPage() {
       <div
         style={{
           position: 'fixed',
-          top: 90,
+          top: 95,
           right: 20,
           zIndex: 9999
         }}
@@ -134,8 +144,31 @@ export default function FeedPage() {
             logout()
             navigate('/login')
           }}
+          style={{
+            padding: '12px 18px',
+
+            borderRadius: 14,
+
+            border: 'none',
+
+            cursor: 'pointer',
+
+            background:
+              'linear-gradient(135deg, #ff4d4d, #cc0000)',
+
+            color: 'white',
+
+            fontWeight: 700,
+
+            fontSize: 14,
+
+            boxShadow:
+              '0 4px 15px rgba(0,0,0,0.35)',
+
+            transition: '0.2s'
+          }}
         >
-          Logout
+          Выйти
         </button>
       </div>
 
@@ -153,8 +186,31 @@ export default function FeedPage() {
           onClick={() =>
             navigate('/upload')
           }
+          style={{
+            padding: '14px 20px',
+
+            borderRadius: 14,
+
+            border: 'none',
+
+            cursor: 'pointer',
+
+            background:
+              'linear-gradient(135deg, #4da6ff, #0066ff)',
+
+            color: 'white',
+
+            fontWeight: 700,
+
+            fontSize: 15,
+
+            boxShadow:
+              '0 4px 15px rgba(0,0,0,0.35)',
+
+            transition: '0.2s'
+          }}
         >
-          Upload
+          Загрузить
         </button>
       </div>
 

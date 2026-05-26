@@ -12,6 +12,7 @@ type Props = {
     url: string
     author?: string
     caption?: string
+    added_by_id?: number  
   }
 
   active: boolean
@@ -84,15 +85,23 @@ const VideoCard = forwardRef<VideoCardHandle, Props>(
         }}
       />
 
-      <div className="meta">
+      <div className="meta" style={{ padding: 10 }}>
         <div
-          onClick={() => navigate(`/profile/${video.id}`)}
-          style={{ cursor: 'pointer' }}
+          onClick={() =>
+            video.added_by_id && navigate(`/profile/${video.added_by_id}`)
+          }
+          style={{
+            cursor: 'pointer',
+            fontWeight: 600,
+            color: '#4da6ff'
+          }}
         >
-          @{video.author ?? 'unknown'}
+          @{video.author ?? 'неизвестно'}
         </div>
 
-        <div>{video.caption}</div>
+        <div style={{ marginTop: 5 }}>
+          {video.caption ?? 'Без описания'}
+        </div>
       </div>
     </div>
   )

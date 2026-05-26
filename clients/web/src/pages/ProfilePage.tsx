@@ -1,8 +1,8 @@
 import {
   useEffect,
-  useState
+  useState,
 } from 'react'
-
+import type { CSSProperties } from 'react'
 import {
   useParams,
   useNavigate
@@ -57,6 +57,62 @@ export default function ProfilePage() {
     useState(false)
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  const [followersList, setFollowersList] = useState<UserProfile[]>([])
+  const [followingsList, setFollowingsList] = useState<UserProfile[]>([])
+
+  const [showFollowers, setShowFollowers] = useState(false)
+  const [showFollowings, setShowFollowings] = useState(false)
+
+  async function loadFollowersList() {
+    const res = await fetch(`/api/video/profile/${user_id}/followers`)
+    const data = await res.json()
+
+    const arr = Array.isArray(data) ? data : []
+
+    const fullProfiles = await Promise.all(
+      arr.map(async (rel: any) => {
+        const id = rel.follower_id
+
+        const r = await fetch(`/api/video/profile/${id}`)
+        return r.ok ? await r.json() : null
+      })
+    )
+
+    setFollowersList(fullProfiles.filter(Boolean))
+  }
+
+  async function loadFollowingsList() {
+    const res = await fetch(`/api/video/profile/${user_id}/followings`)
+    const data = await res.json()
+
+    const arr = Array.isArray(data) ? data : []
+
+    const fullProfiles = await Promise.all(
+      arr.map(async (rel: any) => {
+        const id = rel.following_id
+
+        const r = await fetch(`/api/video/profile/${id}`)
+        return r.ok ? await r.json() : null
+      })
+    )
+
+    setFollowingsList(fullProfiles.filter(Boolean))
+  }
+
+  async function followUser(id: number) {
+    await fetch(`/api/video/profile/${id}/follow`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+  }
+
+  async function unfollowUser(id: number) {
+    await fetch(`/api/video/profile/${id}/unfollow`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+  }
 
   async function fetchProfile() {
     try {
@@ -238,6 +294,51 @@ export default function ProfilePage() {
   const isOwnProfile =
     currentUser?.id === Number(user_id)
 
+  const modalStyle: CSSProperties = {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999
+  }
+
+  const modalBox: CSSProperties = {
+    background: '#111',
+    padding: 20,
+    maxHeight: '70vh',
+    width: 400,
+    color: 'white',
+    borderRadius: 12,
+
+    overflowY: 'auto',   // ✅ ADD THIS
+    display: 'flex',
+    flexDirection: 'column'
+  }
+
+  const userRow = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+    width: '100%',
+    overflow: 'hidden'
+  }
+
+  const avatar = {
+    width: 40,
+    height: 40,
+    borderRadius: '50%'
+  }
+
+  const btn = {
+    marginLeft: 'auto',
+    padding: '6px 10px',
+    borderRadius: 8,
+    border: 'none',
+    cursor: 'pointer'
+  }
 
   return (
     <div
@@ -475,14 +576,34 @@ export default function ProfilePage() {
             fontSize: 18
           }}
         >
-          <div>
-            <b>{followers}</b>
-            <div>Followers</div>
-          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 40,
+              fontSize: 18
+            }}
+          >
+            <div
+              style={{ cursor: 'pointer' }}
+              onClick={async () => {
+                await loadFollowersList()
+                setShowFollowers(true)
+              }}
+            >
+              <b>{followers}</b>
+              <div>Подписчики</div>
+            </div>
 
-          <div>
-            <b>{followings}</b>
-            <div>Following</div>
+            <div
+              style={{ cursor: 'pointer' }}
+              onClick={async () => {
+                await loadFollowingsList()
+                setShowFollowings(true)
+              }}
+            >
+              <b>{followings}</b>
+              <div>Подписки</div>
+            </div>
           </div>
         </div>
       </div>
@@ -556,7 +677,136 @@ export default function ProfilePage() {
           </div>
         ))}
       </div>
+      {showFollowers && (
+        <div style={modalStyle}>
+          <div style={modalBox}>
+            <h2>Подписчики</h2>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
+            {followersList.map(user => (
+              <div key={user.id}
+                style={{
+                  ...userRow,
+                  cursor: 'pointer'
+                }}
+                onClick={() => navigate(`/profile/${user.id}`)}
+              >
+                <div
+                  style={{
+                    ...avatar,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#1b1f24',
+                    fontSize: 20
+                  }}
+                >
+                  {user.img ? (
+                    <img
+                      src={`/stream/${user.img}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%'
+                      }}
+                    />
+                  ) : (
+                    '👤'
+                  )}
+                </div>
 
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {user.email}
+                </span>
+
+                <button
+                  onClick={() => unfollowUser(user.id)}
+                  style={btn}
+                >
+                  Отписаться
+                </button>
+              </div>
+            ))}
+            </div>
+            <button onClick={() => setShowFollowers(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
+      {showFollowings && (
+        <div style={modalStyle}>
+          <div style={modalBox}>
+            <h2>Подписки</h2>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
+              {followingsList.map(user => (
+                <div key={user.id}
+                  style={{
+                    ...userRow,
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => navigate(`/profile/${user.id}`)}
+                >
+                  <div
+                    style={{
+                      ...avatar,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#1b1f24',
+                      fontSize: 20
+                    }}
+                  >
+                    {user.img ? (
+                      <img
+                        src={`/stream/${user.img}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          borderRadius: '50%'
+                        }}
+                      />
+                    ) : (
+                      '👤'
+                    )}
+                  </div>
+
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {user.email}
+                  </span>
+
+                  <button
+                    onClick={() => followUser(user.id)}
+                    style={btn}
+                  >
+                    Подписаться
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowFollowings(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
