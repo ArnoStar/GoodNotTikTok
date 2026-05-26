@@ -42,34 +42,99 @@ export default function LoginForm({
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <h1>Login</h1>
+    <form
+      onSubmit={onSubmit}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 18
+      }}
+    >
+
+      {/* EMAIL */}
 
       <input
-        placeholder="Email"
+        type="email"
+        placeholder="Почта"
         value={email}
         onChange={(e) =>
           setEmail(e.target.value)
         }
+        style={{
+          padding: '16px 18px',
+          borderRadius: 14,
+          border: '1px solid #374151',
+          background: '#1f2937',
+          color: 'white',
+          fontSize: 16,
+          outline: 'none'
+        }}
       />
+
+      {/* PASSWORD */}
 
       <input
         type="password"
-        placeholder="Password"
+        placeholder="Пароль"
         value={password}
         onChange={(e) =>
           setPassword(e.target.value)
         }
+        style={{
+          padding: '16px 18px',
+          borderRadius: 14,
+          border: '1px solid #374151',
+          background: '#1f2937',
+          color: 'white',
+          fontSize: 16,
+          outline: 'none'
+        }}
       />
 
-      <button disabled={loading}>
+      {/* BUTTON */}
+
+      <button
+        disabled={loading}
+        style={{
+          padding: '16px',
+          borderRadius: 14,
+          border: 'none',
+          background:
+            loading
+              ? '#374151'
+              : 'linear-gradient(135deg, #2563eb, #3b82f6)',
+          color: 'white',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: loading
+            ? 'not-allowed'
+            : 'pointer',
+          transition: '0.2s ease'
+        }}
+      >
         {loading
-          ? 'Loading...'
-          : 'Login'}
+          ? 'Загрузка...'
+          : 'Войти'}
       </button>
 
+      {/* ERROR */}
+
       {error && (
-        <div>{error}</div>
+        <div
+          style={{
+            background:
+              'rgba(239,68,68,0.15)',
+            border:
+              '1px solid rgba(239,68,68,0.4)',
+            color: '#fca5a5',
+            padding: 14,
+            borderRadius: 12,
+            textAlign: 'center',
+            fontSize: 14
+          }}
+        >
+          {error}
+        </div>
       )}
     </form>
   )

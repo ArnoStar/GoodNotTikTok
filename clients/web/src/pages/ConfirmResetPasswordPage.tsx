@@ -61,62 +61,125 @@ export default function ConfirmResetPasswordPage() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        background: '#0f1115',
-        color: 'white'
+        background:
+          'linear-gradient(135deg, #0f172a, #111827)',
+        color: 'white',
+        padding: 20
       }}
     >
       <div
         style={{
-          width: 400,
-          padding: 30,
-          borderRadius: 12,
-          background: '#1b1f24',
+          width: '100%',
+          maxWidth: 420,
+
+          padding: 35,
+
+          borderRadius: 20,
+
+          border: '1px solid #2a2f38',
+
+          background: 'rgba(17, 24, 39, 0.95)',
+          
+          boxShadow:
+            '0 10px 40px rgba(0,0,0,0.45)',
+
           display: 'flex',
           flexDirection: 'column',
-          gap: 15
+
+          gap: 18
         }}
       >
-        <h1>Confirm Reset</h1>
+        <h1
+          style={{
+            margin: 0,
+            textAlign: 'center',
+            fontSize: 32,
+            fontWeight: 700
+          }}
+        >
+          Сброс пароля
+        </h1>
+
+        <div
+          style={{
+            textAlign: 'center',
+            color: '#9aa4b2',
+            fontSize: 14,
+            marginTop: -5
+          }}
+        >
+          Введите код из письма и новый пароль
+        </div>
 
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Электронная почта"
           value={email}
           onChange={(e) =>
             setEmail(e.target.value)
           }
           style={{
-            padding: 12,
-            borderRadius: 8,
-            border: 'none'
+            padding: 14,
+
+            borderRadius: 12,
+
+            border: '1px solid #2f3540',
+
+            background: '#0f1115',
+
+            color: 'white',
+
+            fontSize: 15,
+
+            outline: 'none'
           }}
         />
 
         <input
           type="text"
-          placeholder="Code"
+          placeholder="Код подтверждения"
           value={code}
           onChange={(e) =>
             setCode(e.target.value)
           }
           style={{
-            padding: 12,
-            borderRadius: 8,
-            border: 'none'
+            padding: 14,
+
+            borderRadius: 12,
+
+            border: '1px solid #2f3540',
+
+            background: '#0f1115',
+
+            color: 'white',
+
+            fontSize: 15,
+
+            outline: 'none'
           }}
         />
 
         <input
           type="password"
-          placeholder="New password"
+          placeholder="Новый пароль"
           value={password}
           onChange={(e) =>
             setPassword(e.target.value)
           }
           style={{
-            padding: 12,
-            borderRadius: 8,
-            border: 'none'
+            padding: 14,
+
+            borderRadius: 12,
+
+            border: '1px solid #2f3540',
+
+            background: '#0f1115',
+
+            color: 'white',
+
+            fontSize: 15,
+
+            outline: 'none'
           }}
         />
 
@@ -124,19 +187,55 @@ export default function ConfirmResetPasswordPage() {
           onClick={submit}
           disabled={loading}
           style={{
-            padding: 12,
+            marginTop: 5,
+
+            padding: 14,
+
             border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer'
+
+            borderRadius: 12,
+
+            cursor: 'pointer',
+
+            background:
+              loading
+                ? '#3a3f47'
+                : 'linear-gradient(135deg, #4da6ff, #0066ff)',
+
+            color: 'white',
+
+            fontWeight: 700,
+
+            fontSize: 16,
+
+            transition: '0.2s'
           }}
         >
           {loading
-            ? 'Changing...'
-            : 'Change Password'}
+            ? 'Изменение пароля...'
+            : 'Изменить пароль'}
         </button>
 
         {message && (
-          <div>
+          <div
+            style={{
+              marginTop: 5,
+
+              padding: 12,
+
+              borderRadius: 10,
+
+              background: '#11151b',
+
+              border: '1px solid #2a2f38',
+
+              textAlign: 'center',
+
+              color: '#d1d5db',
+
+              fontSize: 14
+            }}
+          >
             {message}
           </div>
         )}

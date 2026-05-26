@@ -42,35 +42,80 @@ export default function UploadPage() {
   }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Upload Video</h1>
-
-      <input
-        type="file"
-        accept="video/mp4"
-        onChange={(e) =>
-          setFile(e.target.files?.[0] ?? null)
-        }
-      />
-
-      <br />
-      <br />
-
-      <button
-        onClick={upload}
-        disabled={!file || loading}
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: '#0f1115',
+        color: 'white'
+      }}
+    >
+      <div
+        style={{
+          width: 420,
+          padding: 30,
+          borderRadius: 14,
+          background: '#1b1f24',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+        }}
       >
-        {loading
-          ? 'Uploading...'
-          : 'Upload'}
-      </button>
+        <h1 style={{ margin: 0, textAlign: 'center' }}>
+          Загрузка видео
+        </h1>
 
-      <br />
-      <br />
+        <div
+          style={{
+            padding: 14,
+            border: '1px dashed #444',
+            borderRadius: 10,
+            background: '#0f1115'
+          }}
+        >
+          <input
+            type="file"
+            accept="video/mp4"
+            onChange={(e) =>
+              setFile(e.target.files?.[0] ?? null)
+            }
+            style={{ color: 'white' }}
+          />
+        </div>
 
-      <button onClick={() => navigate('/')}>
-        Back
-      </button>
+        <button
+          onClick={upload}
+          disabled={!file || loading}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer',
+            background: !file || loading ? '#333' : '#0f9d58',
+            color: 'white',
+            fontWeight: 600
+          }}
+        >
+          {loading ? 'Загрузка...' : 'Загрузить'}
+        </button>
+
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer',
+            background: '#2a2f38',
+            color: 'white'
+          }}
+        >
+          Назад
+        </button>
+      </div>
     </div>
   )
 }
