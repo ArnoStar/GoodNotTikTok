@@ -109,6 +109,25 @@ export default function Feed({
     return { ...v, likes, liked }
   }
 
+  async function fetchById(
+    id: string
+  ): Promise<Video | null> {
+    const res = await fetch(`/api/video/${id}`)
+
+    if (!res.ok) return null
+
+    const v = await res.json()
+
+    return {
+      id: v.id,
+      url: `/stream/${v.id}.mp4`,
+      caption: v.caption,
+      likes: 0,
+      liked: false,
+      added_by_id: v.added_by_id
+    }
+  }
+
   // ---------------- INIT (FIXED LOOP SAFE) ----------------
   useEffect(() => {
     let cancelled = false
@@ -120,15 +139,26 @@ export default function Feed({
       const MAX_ATTEMPTS = 6
       let attempts = 0
 
-      const first = await fetchVideo()
+      if (watchId) {
+        const watched = await fetchById(watchId)
 
-      if (!first) {
-        setVideos([])
-        return
+        if (watched) {
+          base.push(watched)
+          seen.add(watched.id)
+        }
       }
 
-      base.push(first)
-      seen.add(first.id)
+      if (base.length === 0) {
+        const first = await fetchVideo()
+
+        if (!first) {
+          setVideos([])
+          return
+        }
+
+        base.push(first)
+        seen.add(first.id)
+      }
 
       while (base.length < 5 && attempts < MAX_ATTEMPTS) {
         attempts++
