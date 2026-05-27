@@ -11,3 +11,7 @@ class ProfileGet(BaseModel):
     id:int
     email:str
     img:str | None
+
+class VideoPost(BaseModel):
+    title:str
+    description:str
