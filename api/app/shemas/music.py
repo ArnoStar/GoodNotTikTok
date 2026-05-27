@@ -9,5 +9,5 @@ class CommentPost(BaseModel):
 
 class ProfileGet(BaseModel):
     id:int
-    email:str
+    username:str
     img:str | None

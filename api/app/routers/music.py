@@ -63,7 +63,7 @@ def com_video(video_id:str, comment:CommentPost, user:User = Depends(get_current
 @router.get("/profile/{user_id}")
 def get_user_v(user_id:int, db:Session = Depends(get_db)):
     user:User = get_user_by_id(user_id, db)
-    return ProfileGet(id=user.id, email=user.email, img=user.image)
+    return ProfileGet(id=user.id, email=user.username, img=user.image)
 
 @router.get("/profile/{user_id}/followers")
 def get_all_followers_user(user_id:int, db:Session = Depends(get_db)):
