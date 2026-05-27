@@ -224,6 +224,13 @@ def view_video(video:Video, user:User, db:Session) -> View:
     db.refresh(view)
     return view
 
+def get_views(video_id:str, db:Session) -> int:
+    return (
+        db.query(func.count(View.user_id))
+        .filter(View.video_id == video_id)
+        .scalar()
+    )
+
 def save_video(video:Video, user:User, db:Session) -> Save:
     if db.query(Save).filter(Save.user_id == user.id, Save.video_id == video.id).first():
         raise HTTPException(400, "You already saved this video")
