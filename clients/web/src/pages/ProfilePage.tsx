@@ -1,29 +1,36 @@
 import {
   useEffect,
-  useState,
+  useState
 } from 'react'
-import type { CSSProperties } from 'react'
+
 import {
-  useParams,
-  useNavigate
+  useNavigate,
+  useParams
 } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
 
-type UserProfile = {
-  id: number
-  email: string
-  img?: string | null
-}
+import type {
+  CurrentUser,
+  UserProfile,
+  Video
+} from '../types/profile'
 
-type Video = {
-  id: string
-  caption?: string
-}
+import {
+  fetchFollowers,
+  fetchFollowings,
+  fetchFollowState,
+  fetchMe,
+  fetchProfileById,
+  fetchVideos,
+  followUser,
+  unfollowUser,
+  uploadProfilePictureApi
+} from '../services/profileApi'
 
-type CurrentUser = {
-  id: number
-}
+import UploadProfilePictureModal from '../components/profile/UploadProfilePictureModal'
+import ProfileVideos from '../components/profile/ProfileVideos'
+import FollowListModal from '../components/profile/FollowListModal'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -55,125 +62,127 @@ export default function ProfilePage() {
 
   const [showUploadPopup, setShowUploadPopup] =
     useState(false)
-  
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const [followersList, setFollowersList] = useState<UserProfile[]>([])
-  const [followingsList, setFollowingsList] = useState<UserProfile[]>([])
+  const [selectedFile, setSelectedFile] =
+    useState<File | null>(null)
 
-  const [showFollowers, setShowFollowers] = useState(false)
-  const [showFollowings, setShowFollowings] = useState(false)
+  const [followersList, setFollowersList] =
+    useState<UserProfile[]>([])
+
+  const [followingsList, setFollowingsList] =
+    useState<UserProfile[]>([])
+
+  const [showFollowers, setShowFollowers] =
+    useState(false)
+
+  const [showFollowings, setShowFollowings] =
+    useState(false)
 
   async function loadFollowersList() {
-    const res = await fetch(`/api/video/profile/${user_id}/followers`)
-    const data = await res.json()
+    if (!user_id) return
 
-    const arr = Array.isArray(data) ? data : []
+    const data = await fetchFollowers(user_id)
+
+    const arr = Array.isArray(data)
+      ? data
+      : []
 
     const fullProfiles = await Promise.all(
       arr.map(async (rel: any) => {
         const id = rel.follower_id
 
-        const r = await fetch(`/api/video/profile/${id}`)
-        return r.ok ? await r.json() : null
+        try {
+          return await fetchProfileById(
+            String(id)
+          )
+        } catch {
+          return null
+        }
       })
     )
 
-    setFollowersList(fullProfiles.filter(Boolean))
+    setFollowersList(
+      fullProfiles.filter(Boolean)
+    )
   }
 
   async function loadFollowingsList() {
-    const res = await fetch(`/api/video/profile/${user_id}/followings`)
-    const data = await res.json()
+    if (!user_id) return
 
-    const arr = Array.isArray(data) ? data : []
+    const data = await fetchFollowings(
+      user_id
+    )
+
+    const arr = Array.isArray(data)
+      ? data
+      : []
 
     const fullProfiles = await Promise.all(
       arr.map(async (rel: any) => {
         const id = rel.following_id
 
-        const r = await fetch(`/api/video/profile/${id}`)
-        return r.ok ? await r.json() : null
+        try {
+          return await fetchProfileById(
+            String(id)
+          )
+        } catch {
+          return null
+        }
       })
     )
 
-    setFollowingsList(fullProfiles.filter(Boolean))
-  }
-
-  async function followUser(id: number) {
-    await fetch(`/api/video/profile/${id}/follow`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` }
-    })
-  }
-
-  async function unfollowUser(id: number) {
-    await fetch(`/api/video/profile/${id}/unfollow`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    setFollowingsList(
+      fullProfiles.filter(Boolean)
+    )
   }
 
   async function fetchProfile() {
+    if (!user_id) return
+
     try {
       setLoading(true)
 
-      // CURRENT USER
-      let meData: any = null
+      let meData: CurrentUser | null = null
 
-      const meRes = await fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`
+      if (token) {
+        meData = await fetchMe(token)
+
+        if (meData) {
+          setCurrentUser(meData)
         }
-      })
-
-      if (meRes.ok) {
-        meData = await meRes.json()
-        setCurrentUser(meData)
       }
 
-      // PROFILE
-      const profileRes = await fetch(
-        `/api/video/profile/${user_id}`
-      )
-      const profileData = await profileRes.json()
+      const profileData =
+        await fetchProfileById(user_id)
+
       setProfile(profileData)
 
-      // FOLLOWERS
-      const followersRes = await fetch(
-        `/api/video/profile/${user_id}/followers`
+      const followersData =
+        await fetchFollowers(user_id)
+
+      const followersArray =
+        Array.isArray(followersData)
+          ? followersData
+          : []
+
+      setFollowers(
+        followersArray.length
       )
-      const followersData = await followersRes.json()
 
-      const followersArray = Array.isArray(followersData)
-        ? followersData
-        : []
+      if (meData && token) {
+        const state =
+          await fetchFollowState(
+            user_id,
+            token
+          )
 
-      setFollowers(followersArray.length)
-
-      // CHECK FOLLOW STATE
-      if (meData) {
-        const followStateRes = await fetch(
-          `/api/video/profile/${user_id}/follow_state`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
+        setIsFollowing(
+          Boolean(state)
         )
-
-        if (followStateRes.ok) {
-          const state = await followStateRes.json()
-
-          setIsFollowing(Boolean(state))
-        }
       }
 
-      // FOLLOWINGS
-      const followingsRes = await fetch(
-        `/api/video/profile/${user_id}/followings`
-      )
-      const followingsData = await followingsRes.json()
+      const followingsData =
+        await fetchFollowings(user_id)
 
       setFollowings(
         Array.isArray(followingsData)
@@ -181,13 +190,14 @@ export default function ProfilePage() {
           : 0
       )
 
-      // VIDEOS
-      const videosRes = await fetch(
-        `/api/video/profile/${user_id}/videos`
-      )
-      const videosData = await videosRes.json()
+      const videosData =
+        await fetchVideos(user_id)
 
-      setVideos(Array.isArray(videosData) ? videosData : [])
+      setVideos(
+        Array.isArray(videosData)
+          ? videosData
+          : []
+      )
 
     } catch (err) {
       console.error(err)
@@ -196,73 +206,74 @@ export default function ProfilePage() {
     }
   }
 
-  async function follow() {
-    const res = await fetch(
-      `/api/video/profile/${user_id}/follow`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+  async function handleFollow() {
+    if (!user_id || !token) return
+
+    const res = await followUser(
+      Number(user_id),
+      token
     )
 
     if (res.ok) {
       setIsFollowing(true)
+
       setFollowers(v => v + 1)
     }
   }
 
-  async function unfollow() {
-    const res = await fetch(
-      `/api/video/profile/${user_id}/unfollow`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+  async function handleUnfollow() {
+    if (!user_id || !token) return
+
+    const res = await unfollowUser(
+      Number(user_id),
+      token
     )
 
     if (res.ok) {
       setIsFollowing(false)
+
       setFollowers(v =>
         Math.max(0, v - 1)
       )
     }
   }
 
-  async function uploadProfilePicture(
-    file: File
-  ) {
-    const formData = new FormData()
+  async function handleUpload() {
+    if (!selectedFile || !token) return
 
-    formData.append(
-      'img',
-      file
-    )
-
-    const res = await fetch(
-      '/api/auth/change_profile_picture',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: formData
-      }
-    )
+    const res =
+      await uploadProfilePictureApi(
+        selectedFile,
+        token
+      )
 
     if (res.ok) {
       setShowUploadPopup(false)
+
+      setSelectedFile(null)
+
       fetchProfile()
     }
   }
 
+  async function handleFollowUser(
+    id: number
+  ) {
+    if (!token) return
+
+    await followUser(id, token)
+  }
+
+  async function handleUnfollowUser(
+    id: number
+  ) {
+    if (!token) return
+
+    await unfollowUser(id, token)
+  }
+
   useEffect(() => {
-    if (user_id) {
-      fetchProfile()
-    }
+    fetchProfile()
   }, [user_id])
 
   if (loading) {
@@ -292,53 +303,8 @@ export default function ProfilePage() {
   }
 
   const isOwnProfile =
-    currentUser?.id === Number(user_id)
-
-  const modalStyle: CSSProperties = {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.7)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999
-  }
-
-  const modalBox: CSSProperties = {
-    background: '#111',
-    padding: 20,
-    maxHeight: '70vh',
-    width: 400,
-    color: 'white',
-    borderRadius: 12,
-
-    overflowY: 'auto',   // ✅ ADD THIS
-    display: 'flex',
-    flexDirection: 'column'
-  }
-
-  const userRow = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-    width: '100%',
-    overflow: 'hidden'
-  }
-
-  const avatar = {
-    width: 40,
-    height: 40,
-    borderRadius: '50%'
-  }
-
-  const btn = {
-    marginLeft: 'auto',
-    padding: '6px 10px',
-    borderRadius: 8,
-    border: 'none',
-    cursor: 'pointer'
-  }
+    currentUser?.id ===
+    Number(user_id)
 
   return (
     <div
@@ -359,6 +325,8 @@ export default function ProfilePage() {
         paddingBottom: 50
       }}
     >
+      {/* GO BACK */}
+
       <div
         style={{
           position: 'fixed',
@@ -376,77 +344,20 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* POPUP */}
+      {/* UPLOAD MODAL */}
 
       {showUploadPopup && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background:
-              'rgba(0,0,0,0.7)',
-
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-
-            zIndex: 9999
+        <UploadProfilePictureModal
+          selectedFile={selectedFile}
+          setSelectedFile={
+            setSelectedFile
+          }
+          onSubmit={handleUpload}
+          onClose={() => {
+            setShowUploadPopup(false)
+            setSelectedFile(null)
           }}
-        >
-          <div
-            style={{
-              background: '#111',
-              padding: 30,
-              borderRadius: 16
-            }}
-          >
-            <h2>
-              Change profile picture
-            </h2>
-
-            <input
-              type="file"
-              accept=".png,.jpg,.jpeg,image/png,image/jpeg"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (!file) return
-                setSelectedFile(file)
-              }}
-            />
-
-            <button
-              onClick={() => {
-                if (!selectedFile) return
-                uploadProfilePicture(selectedFile)
-                setShowUploadPopup(false)
-                setSelectedFile(null)
-              }}
-              style={{
-                marginTop: 20,
-                marginRight: 10,
-                padding: '10px 16px',
-                borderRadius: 10,
-                border: 'none',
-                background: '#0f9d58',
-                color: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              Submit
-            </button>
-
-            <button
-              onClick={() =>
-                setShowUploadPopup(false)
-              }
-              style={{
-                marginTop: 20
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        />
       )}
 
       {/* PROFILE HEADER */}
@@ -463,7 +374,6 @@ export default function ProfilePage() {
           paddingTop: 40
         }}
       >
-
         {/* PROFILE IMAGE */}
 
         <div
@@ -475,7 +385,8 @@ export default function ProfilePage() {
 
             overflow: 'hidden',
 
-            border: '4px solid white',
+            border:
+              '4px solid white',
 
             background: '#1b1f24',
 
@@ -499,8 +410,10 @@ export default function ProfilePage() {
                 height: '100%',
 
                 display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                justifyContent:
+                  'center',
+                alignItems:
+                  'center',
 
                 fontSize: 60
               }}
@@ -538,13 +451,14 @@ export default function ProfilePage() {
           >
             Change profile picture
           </button>
-        ) : token && !isOwnProfile ? (
+        ) : token &&
+          !isOwnProfile ? (
           <button
             onClick={() => {
               if (isFollowing) {
-                unfollow()
+                handleUnfollow()
               } else {
-                follow()
+                handleFollow()
               }
             }}
             style={{
@@ -553,10 +467,12 @@ export default function ProfilePage() {
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
+
               background:
                 isFollowing
                   ? '#333'
                   : '#0f9d58',
+
               color: 'white'
             }}
           >
@@ -566,43 +482,46 @@ export default function ProfilePage() {
           </button>
         ) : null}
 
-        {/* FOLLOW STATS */}
+        {/* STATS */}
 
         <div
           style={{
             display: 'flex',
             gap: 40,
-
             fontSize: 18
           }}
         >
           <div
             style={{
-              display: 'flex',
-              gap: 40,
-              fontSize: 18
+              cursor: 'pointer'
+            }}
+            onClick={async () => {
+              await loadFollowersList()
+
+              setShowFollowers(true)
             }}
           >
-            <div
-              style={{ cursor: 'pointer' }}
-              onClick={async () => {
-                await loadFollowersList()
-                setShowFollowers(true)
-              }}
-            >
-              <b>{followers}</b>
-              <div>Подписчики</div>
-            </div>
+            <b>{followers}</b>
 
-            <div
-              style={{ cursor: 'pointer' }}
-              onClick={async () => {
-                await loadFollowingsList()
-                setShowFollowings(true)
-              }}
-            >
-              <b>{followings}</b>
-              <div>Подписки</div>
+            <div>
+              Подписчики
+            </div>
+          </div>
+
+          <div
+            style={{
+              cursor: 'pointer'
+            }}
+            onClick={async () => {
+              await loadFollowingsList()
+
+              setShowFollowings(true)
+            }}
+          >
+            <b>{followings}</b>
+
+            <div>
+              Подписки
             </div>
           </div>
         </div>
@@ -610,202 +529,40 @@ export default function ProfilePage() {
 
       {/* VIDEOS */}
 
-      <div
-        style={{
-          display: 'grid',
+      <ProfileVideos
+        videos={videos}
+      />
 
-          gridTemplateColumns:
-            'repeat(auto-fill, minmax(280px, 1fr))',
+      {/* FOLLOWERS MODAL */}
 
-          gap: 15,
-
-          padding: 20
-        }}
-      >
-        {videos.map((v) => (
-          <div
-            key={v.id}
-
-            onClick={() => {
-              navigate(`/?watch=${v.id}`)
-            }}
-
-            style={{
-              width: '100%',
-
-              aspectRatio: '9 / 16',
-
-              background: '#111',
-
-              borderRadius: 14,
-
-              overflow: 'hidden',
-
-              cursor: 'pointer'
-            }}
-          >
-            <video
-              src={`/stream/${v.id}.mp4`}
-
-              muted
-
-              preload="metadata"
-
-              style={{
-                width: '100%',
-                height: '100%',
-
-                objectFit: 'cover',
-
-                background: '#000'
-              }}
-
-              onLoadedMetadata={(e) => {
-                e.currentTarget.currentTime = 0.1
-              }}
-
-              onMouseEnter={(e) => {
-                e.currentTarget
-                  .play()
-                  .catch(() => {})
-              }}
-
-              onMouseLeave={(e) => {
-                e.currentTarget.pause()
-              }}
-            />
-          </div>
-        ))}
-      </div>
       {showFollowers && (
-        <div style={modalStyle}>
-          <div style={modalBox}>
-            <h2>Подписчики</h2>
-            <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
-            {followersList.map(user => (
-              <div key={user.id}
-                style={{
-                  ...userRow,
-                  cursor: 'pointer'
-                }}
-                onClick={() => navigate(`/profile/${user.id}`)}
-              >
-                <div
-                  style={{
-                    ...avatar,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: '#1b1f24',
-                    fontSize: 20
-                  }}
-                >
-                  {user.img ? (
-                    <img
-                      src={`/stream/${user.img}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '50%'
-                      }}
-                    />
-                  ) : (
-                    '👤'
-                  )}
-                </div>
-
-                <span
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {user.email}
-                </span>
-
-                <button
-                  onClick={() => unfollowUser(user.id)}
-                  style={btn}
-                >
-                  Отписаться
-                </button>
-              </div>
-            ))}
-            </div>
-            <button onClick={() => setShowFollowers(false)}>
-              Закрыть
-            </button>
-          </div>
-        </div>
+        <FollowListModal
+          title="Подписчики"
+          users={followersList}
+          buttonText="Отписаться"
+          onAction={
+            handleUnfollowUser
+          }
+          onClose={() =>
+            setShowFollowers(false)
+          }
+        />
       )}
+
+      {/* FOLLOWINGS MODAL */}
+
       {showFollowings && (
-        <div style={modalStyle}>
-          <div style={modalBox}>
-            <h2>Подписки</h2>
-            <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
-              {followingsList.map(user => (
-                <div key={user.id}
-                  style={{
-                    ...userRow,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => navigate(`/profile/${user.id}`)}
-                >
-                  <div
-                    style={{
-                      ...avatar,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: '#1b1f24',
-                      fontSize: 20
-                    }}
-                  >
-                    {user.img ? (
-                      <img
-                        src={`/stream/${user.img}`}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          borderRadius: '50%'
-                        }}
-                      />
-                    ) : (
-                      '👤'
-                    )}
-                  </div>
-
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {user.email}
-                  </span>
-
-                  <button
-                    onClick={() => followUser(user.id)}
-                    style={btn}
-                  >
-                    Подписаться
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setShowFollowings(false)}>
-              Закрыть
-            </button>
-          </div>
-        </div>
+        <FollowListModal
+          title="Подписки"
+          users={followingsList}
+          buttonText="Подписаться"
+          onAction={
+            handleFollowUser
+          }
+          onClose={() =>
+            setShowFollowings(false)
+          }
+        />
       )}
     </div>
   )
