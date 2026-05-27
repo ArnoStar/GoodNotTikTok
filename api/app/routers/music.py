@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, Request, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
 from app.db.database_sql import get_db
@@ -34,10 +34,10 @@ def find_friends_video(user:User = Depends(get_current_user), db:Session = Depen
     return get_friends_video(user, db)
 
 @router.post("/")
-def create_upload_file(video_info:VideoPost, file = Depends(verify_video), user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+def create_upload_file(title:str = Form(...), description:str = Form(...), file = Depends(verify_video), user:User = Depends(get_current_user), db:Session = Depends(get_db)):
     video_id = generate_useable_id(db)
     file.filename = f"{video_id}.{file.filename.split(".")[-1]}"
-    add_metadata_video(video_id, video_info.title, video_info.description, user, db)
+    add_metadata_video(video_id, title, description, user, db)
     download_video(file)
     return {"filename": file.filename, "content_type": file.content_type}
 
