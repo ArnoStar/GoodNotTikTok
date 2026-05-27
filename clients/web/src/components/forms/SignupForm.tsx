@@ -5,6 +5,9 @@ export default function SignupForm({
 }: {
   onSigned?: () => void
 }) {
+  const [username, setUsername] =
+    useState('')
+
   const [email, setEmail] =
     useState('')
 
@@ -29,6 +32,7 @@ export default function SignupForm({
             'application/json'
         },
         body: JSON.stringify({
+          username,
           email,
           password,
           password_confirm:
@@ -68,6 +72,26 @@ export default function SignupForm({
       >
         Регистрация
       </h1>
+
+      {/* USERNAME */}
+
+      <input
+        type="text"
+        placeholder="Имя пользователя"
+        value={username}
+        onChange={(e) =>
+          setUsername(e.target.value)
+        }
+        style={{
+          padding: '16px 18px',
+          borderRadius: 14,
+          border: '1px solid #374151',
+          background: '#1f2937',
+          color: 'white',
+          fontSize: 16,
+          outline: 'none'
+        }}
+      />
 
       {/* EMAIL */}
 
@@ -134,6 +158,7 @@ export default function SignupForm({
       {/* BUTTON */}
 
       <button
+        type="submit"
         style={{
           padding: '16px',
           borderRadius: 14,
