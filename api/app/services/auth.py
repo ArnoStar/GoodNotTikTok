@@ -38,8 +38,8 @@ def create_token(data: dict, delta_exp_time: timedelta | None = None):
 
     return encoded
 
-def create_user(email:str, password_hash:str, db:Session = Depends(get_db)):
-    user = User(email = email, password_hash = password_hash)
+def create_user(username:str, email:str, password_hash:str, db:Session = Depends(get_db)):
+    user = User(username = username, email = email, password_hash = password_hash)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -63,8 +63,8 @@ def generate_random_code(lenght:int = 8):
         code+=str(randint(0,9))
     return code
 
-async def add_email_to_confirmation(email:str, password_hash:str, code:int):
-    user_info = {"code":code,"password_hash":password_hash, "email":email}
+async def add_email_to_confirmation(username, email:str, password_hash:str, code:int):
+    user_info = {"code":code,"password_hash":password_hash, "email":email, "username":username}
     await redis.set(name = email, value = json.dumps(user_info), ex=REGISTER_EXPIRATION_TIME)
 
 async def add_email_to_confirmation_reset(email:str, code:int):

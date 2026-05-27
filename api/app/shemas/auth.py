@@ -5,6 +5,7 @@ class UserLogIn(BaseModel):
     password:str
 
 class UserSignIn(BaseModel):
+    username:str
     email:str
     password:str
     password_confirm:str

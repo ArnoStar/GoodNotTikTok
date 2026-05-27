@@ -25,13 +25,13 @@ def login(user:User = Depends(verify_credentials)):
 @router.post("/signin")
 async def signin(user_info: UserSignIn = Depends(verify_new_user_information)):
     confirmation_code = generate_random_code()
-    await add_email_to_confirmation(user_info.email, hash_password(user_info.password), confirmation_code)
+    await add_email_to_confirmation(user_info.username, user_info.email, hash_password(user_info.password), confirmation_code)
     await send_confirmation_email(user_info.email, confirmation_code)
     return {"message":"Please confirm your email"}
 
 @router.post("/confirm")
 async def confirm(user_info: dict = Depends(verify_validation_code), db:Session = Depends(get_db)):
-    user = create_user(user_info["email"], user_info["password_hash"], db)
+    user = create_user(user_info["username"], user_info["email"], user_info["password_hash"], db)
     await redis.delete(user.email)
     return user
 
@@ -49,7 +49,6 @@ async def confirm_reset_password(user_info = Depends(change_password)):
 def chg_profil_pic(user = Depends(get_current_user), img:UploadFile = File(...), db = Depends(get_db)):
     img = add_profile_pic(user, img, db)
     download_video(img)
-
 
 @router.get("/me")
 def me(user:User = Depends(get_current_user)):
