@@ -10,6 +10,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     email = Column(String, index=True, unique=True)
+    username = Column(String, nullable=False, server_default="cool_default_username")
     password_hash = Column(String)
 
     image = Column(String, default=None, nullable=True)
@@ -23,6 +24,10 @@ class User(Base):
     playlist_created = relationship("PlayList", back_populates="author")
 
     liked_video = relationship("Like", back_populates="user")
+
+    viewed_video = relationship("View", back_populates="user")
+
+    saved_video = relationship("Save", back_populates="user")
 
     commented_video = relationship("Comment", back_populates="user")
 
@@ -87,6 +92,13 @@ class Video(Base):
 
     likes = relationship("Like", back_populates="video")
 
+    views = relationship("View", back_populates="video")
+
+    saves = relationship("Save", back_populates="video")
+
+    title = Column(String)
+    description = Column(String)
+
     comments = relationship("Comment", back_populates="video")
 
 class Like(Base):
@@ -97,6 +109,24 @@ class Like(Base):
 
     video_id = Column(String, ForeignKey("videos.id"), primary_key=True, index=True)
     video = relationship("Video", back_populates="likes")
+
+class View(Base):
+    __tablename__ = "views"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, index=True)
+    user = relationship("User", back_populates="viewed_video")
+
+    video_id = Column(String, ForeignKey("videos.id"), primary_key=True, index=True)
+    video = relationship("Video", back_populates="views")
+
+class Save(Base):
+    __tablename__ = "saves"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, index=True)
+    user = relationship("User", back_populates="saved_video")
+
+    video_id = Column(String, ForeignKey("videos.id"), primary_key=True, index=True)
+    video = relationship("Video", back_populates="saves")
 
 class Comment(Base):
     __tablename__ = "comments"
