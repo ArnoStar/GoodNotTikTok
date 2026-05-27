@@ -3,7 +3,7 @@ from fastapi import HTTPException, Depends, UploadFile, File
 from app.shemas.music import MusicPost
 from app.core.config import settings
 from app.db.database_sql import get_db
-from app.db.models import Music, User, Video, Like, Comment, Follow
+from app.db.models import Music, User, Video, Like, Comment, Follow, View, Save
 from app.deps.auth import get_current_user
 from app.services.deps import register_function
 
@@ -13,6 +13,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from typing import Callable, Annotated
 from sqlalchemy.sql.expression import func
+from sqlalchemy.sql import exists
 import random
 import string
 import shutil
@@ -22,8 +23,8 @@ UPLOADS = settings.img_dir
 
 downloaders:dict[str, Callable[[str], str]] = dict()
 
-def add_metadata_video(video_id:str, user:User, db:Session):
-    video = Video(id=video_id, added_by=user)
+def add_metadata_video(video_id:str, title:str, description:str, user:User, db:Session):
+    video = Video(id=video_id, added_by=user, title=title, description=description)
     db.add(video)
     db.commit()
     db.refresh(video)
@@ -179,3 +180,68 @@ def is_following(follower:User, following:User, db:Session) -> bool:
 
 def get_random_video(db:Session) -> Video:
     return db.query(Video).order_by(func.random()).first()
+
+def get_notwatched_random_video(user:User, db:Session) -> Video:
+    return db.query(Video).filter(~exists().where((View.video_id == Video.id) & (View.user_id == user.id))).order_by(func.random()).first()
+
+def get_followed_video(user:User, db:Session) -> Video:
+    return db.query(Video).filter(exists().where((Follow.follower_id == user.id) & (Follow.following_id == Video.added_by_id))).filter(~exists().where((View.video_id == Video.id) & (View.user_id == user.id))).order_by(func.random()).first()
+
+def get_friends_video(user:User, db:Session) -> Video:
+    return (
+        db.query(Video)
+        .filter(
+            # Current user follows the video's author
+            exists().where(
+                (Follow.follower_id == user.id) &
+                (Follow.following_id == Video.added_by_id)
+            )
+        )
+        .filter(
+            # Video author follows current user back
+            exists().where(
+                (Follow.follower_id == Video.added_by_id) &
+                (Follow.following_id == user.id)
+            )
+        )
+        .filter(
+            # User has NOT watched the video
+            ~exists().where(
+                (View.video_id == Video.id) &
+                (View.user_id == user.id)
+            )
+        )
+        .order_by(func.random())
+        .first()
+    )
+
+def view_video(video:Video, user:User, db:Session) -> View:
+    if db.query(View).filter(View.user_id == user.id, View.video_id == video.id).first():
+        raise HTTPException(400, "You already viewed this video")
+    view = View(user = user, video = video)
+    db.add(view)
+    db.commit()
+    db.refresh(view)
+    return view
+
+def save_video(video:Video, user:User, db:Session) -> Save:
+    if db.query(Save).filter(Save.user_id == user.id, Save.video_id == video.id).first():
+        raise HTTPException(400, "You already saved this video")
+    save = Save(user = user, video = video)
+    db.add(save)
+    db.commit()
+    db.refresh(save)
+    return save
+
+def unsave_video(video:Video, user:User, db:Session) -> Save:
+    save = db.query(Save).filter(Save.user_id == user.id, Save.video_id == video.id).first()
+    if save is None:
+        raise HTTPException(400, "You didn't saved this video")
+    
+    db.delete(save)
+    db.commit()
+
+    return save
+
+def get_saved_videos(user_id:str, db:Session) -> list[Save]:
+    return db.query(Save).filter(Save.user_id == user_id).all()

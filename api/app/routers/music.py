@@ -3,11 +3,12 @@ from fastapi.responses import StreamingResponse
 
 from app.db.database_sql import get_db
 from app.db.models import User
-from app.shemas.music import CommentPost, ProfileGet
+from app.shemas.music import CommentPost, ProfileGet, VideoPost
 from app.deps.auth import get_current_user
 from app.services.music import (add_music, get_metadata_music, verify_video, download_video, generate_useable_id, add_metadata_video, get_metadata_video,
                                 like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video,
-                                get_like_state, get_users_videos, is_following)
+                                get_like_state, get_users_videos, is_following, view_video, save_video, unsave_video, get_saved_videos, get_notwatched_random_video,
+                                get_followed_video, get_friends_video)
 from app.services.auth import get_user_by_id
 from app.core.config import settings
 
@@ -20,11 +21,23 @@ router = APIRouter(prefix="/video", tags=["Video"])
 def find_random_video(db:Session = Depends(get_db)):
     return get_random_video(db)
 
+@router.get("/random")
+def find_notwatched_random_video(user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    return get_notwatched_random_video(user, db)
+
+@router.get("/followed")
+def find_followed_video(user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    return get_followed_video(user, db)
+
+@router.get("/friends")
+def find_friends_video(user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    return get_friends_video(user, db)
+
 @router.post("/")
-def create_upload_file(file = Depends(verify_video), user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+def create_upload_file(video_info:VideoPost, file = Depends(verify_video), user:User = Depends(get_current_user), db:Session = Depends(get_db)):
     video_id = generate_useable_id(db)
     file.filename = f"{video_id}.{file.filename.split(".")[-1]}"
-    add_metadata_video(video_id, user, db)
+    add_metadata_video(video_id, video_info.title, video_info.description, user, db)
     download_video(file)
     return {"filename": file.filename, "content_type": file.content_type}
 
@@ -94,3 +107,22 @@ def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Sessio
 def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
     profile = get_user_by_id(user_id, db)
     return is_following(user, profile, db)
+
+@router.put("/view/{video_id}")
+def watch(video_id:str, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    video = get_metadata_video(video_id, db)
+    return view_video(video, user, db)
+
+@router.put("/save/{video_id}")
+def sv_vd(video_id:str, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    video = get_metadata_video(video_id, db)
+    return save_video(video, user, db)
+
+@router.put("/unsave/{video_id}")
+def unsv_vd(video_id:str, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
+    video = get_metadata_video(video_id, db)
+    return unsave_video(video, user, db)
+
+@router.get("/profile/{user_id}/saved")
+def g_sv_vd(user_id, db:Session = Depends(get_db)):
+    get_saved_videos(user_id, db)
