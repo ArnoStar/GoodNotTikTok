@@ -110,6 +110,23 @@ def get_users_videos(id:int, db:Session = Depends(get_db)):
         raise HTTPException(400, "User doesn't exist")
     return db.query(Video).filter(Video.added_by_id == user.id).order_by(desc(Video.added_date)).all()
     
+def get_users_liked_videos(user_id:int, db:Session = Depends(get_db)):
+    return (
+        db.query(Video)
+        .join(Like, Like.video_id == Video.id)
+        .filter(Like.user_id == user_id)
+        .order_by(Like.date.desc())
+        .all()
+    )
+
+def get_users_saved_videos(user_id:int, db:Session = Depends(get_db)):
+    return (
+        db.query(Video)
+        .join(Save, Save.video_id == Video.id)
+        .filter(Save.user_id == user_id)
+        .order_by(Save.date.desc())
+        .all()
+    )
 
 def get_like_count(video_id:str, db: Session):
     return len(db.query(Like).filter(Like.video_id == video_id).all())
