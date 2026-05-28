@@ -47,6 +47,9 @@ export default function VideoControls({
   const [text, setText] = useState('')
   const [open, setOpen] = useState(false)
 
+  const [saved, setSaved] =
+    useState(false)
+
   const buttonStyle = {
     width: 50,
     height: 50,
@@ -60,6 +63,55 @@ export default function VideoControls({
     alignItems: 'center',
     fontSize: '20px'
   } as const
+
+  // ---------------- LOAD SAVE STATE ----------------
+  useEffect(() => {
+    if (!videoId || !token) return
+
+    fetch(
+      `/api/video/${videoId}/save_state`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`
+        }
+      }
+    )
+      .then(res => res.json())
+      .then(data =>
+        setSaved(Boolean(data))
+      )
+      .catch(() =>
+        setSaved(false)
+      )
+  }, [videoId, token])
+
+  // ---------------- TOGGLE SAVE ----------------
+  async function toggleSave() {
+    if (!videoId || !token) return
+
+    try {
+      const endpoint = saved
+        ? `/api/video/unsave/${videoId}`
+        : `/api/video/save/${videoId}`
+
+      const res = await fetch(
+        endpoint,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization:
+              `Bearer ${token}`
+          }
+        }
+      )
+
+      if (res.ok) {
+        setSaved(v => !v)
+      }
+
+    } catch {}
+  }
 
   // ---------------- LOAD COMMENTS ----------------
   useEffect(() => {
@@ -130,6 +182,42 @@ export default function VideoControls({
     }
   }
 
+  // ---------------- SCROLL TO NEXT/PREV VIDEO ----------------
+  useEffect(() => {
+    let isScrolling = false
+
+    function handleWheel(
+      e: WheelEvent
+    ) {
+      if (isScrolling) return
+
+      isScrolling = true
+
+      if (e.deltaY > 0) {
+        onNext?.()
+      } else if (e.deltaY < 0) {
+        onPrev?.()
+      }
+
+      setTimeout(() => {
+        isScrolling = false
+      }, 250)
+    }
+
+    window.addEventListener(
+      'wheel',
+      handleWheel,
+      { passive: true }
+    )
+
+    return () => {
+      window.removeEventListener(
+        'wheel',
+        handleWheel
+      )
+    }
+  }, [onNext, onPrev])
+
   return (
     <div style={{
       position: 'fixed',
@@ -172,16 +260,23 @@ export default function VideoControls({
         </span>
       </div>
 
+      {/* SAVE */}
+      <button
+        onClick={toggleSave}
+        style={{
+          ...buttonStyle,
+          backgroundColor: saved
+            ? '#0f9d58'
+            : '#1b1f24'
+        }}
+      >
+        🔖
+      </button>
+
       {/* COMMENTS BUTTON */}
       <button onClick={() => setOpen(v => !v)} style={buttonStyle}>
         💬
       </button>
-
-      {/* PREV */}
-      <button onClick={onPrev} style={buttonStyle}>⬆</button>
-
-      {/* NEXT */}
-      <button onClick={onNext} style={buttonStyle}>⬇</button>
 
       {/* ---------------- COMMENT PANEL ---------------- */}
       {open && (
