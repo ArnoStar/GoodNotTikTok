@@ -110,6 +110,8 @@ class Like(Base):
     video_id = Column(String, ForeignKey("videos.id"), primary_key=True, index=True)
     video = relationship("Video", back_populates="likes")
 
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
 class View(Base):
     __tablename__ = "views"
 
@@ -119,6 +121,8 @@ class View(Base):
     video_id = Column(String, ForeignKey("videos.id"), primary_key=True, index=True)
     video = relationship("Video", back_populates="views")
 
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
 class Save(Base):
     __tablename__ = "saves"
 
@@ -127,6 +131,8 @@ class Save(Base):
 
     video_id = Column(String, ForeignKey("videos.id"), primary_key=True, index=True)
     video = relationship("Video", back_populates="saves")
+
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 class Comment(Base):
     __tablename__ = "comments"
@@ -141,6 +147,8 @@ class Comment(Base):
 
     text = Column(String)
 
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
 class Follow(Base):
     __tablename__ = "follows"
 
@@ -149,3 +157,5 @@ class Follow(Base):
 
     following_id = Column(Integer, ForeignKey("users.id"), primary_key=True, index=True)
     following = relationship("User", back_populates="followers", foreign_keys=[following_id])
+
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
