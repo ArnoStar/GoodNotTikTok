@@ -8,7 +8,7 @@ from app.deps.auth import get_current_user
 from app.services.music import (add_music, get_metadata_music, verify_video, download_video, generate_useable_id, add_metadata_video, get_metadata_video,
                                 like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video,
                                 get_like_state, get_users_videos, is_following, view_video, save_video, unsave_video, get_saved_videos, get_notwatched_random_video,
-                                get_followed_video, get_friends_video, get_views)
+                                get_followed_video, get_friends_video, get_views, get_users_liked_videos, get_users_saved_videos)
 from app.services.auth import get_user_by_id
 from app.core.config import settings
 
@@ -90,8 +90,18 @@ def get_all_followings_user(user_id:int, db:Session = Depends(get_db)):
 
 @router.get("/profile/{user_id}/videos")
 def get_all_video_from_user(user_id:int, db:Session = Depends(get_db)):
-    user = get_users_videos(user_id, db)
-    return user
+    videos = get_users_videos(user_id, db)
+    return videos
+
+@router.get("/profile/{user_id}/videos/liked")
+def get_all_liked_video_from_user(user_id:int, db:Session = Depends(get_db)):
+    videos = get_users_liked_videos(user_id, db)
+    return videos
+
+@router.get("/profile/{user_id}/videos/saved")
+def get_all_saved_video_from_user(user_id:int, db:Session = Depends(get_db)):
+    videos = get_users_saved_videos(user_id, db)
+    return videos
 
 @router.put("/profile/{user_id}/follow")
 def follow_profile(user_id:int, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
