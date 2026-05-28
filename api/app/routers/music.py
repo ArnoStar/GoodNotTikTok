@@ -8,7 +8,7 @@ from app.deps.auth import get_current_user
 from app.services.music import (add_music, get_metadata_music, verify_video, download_video, generate_useable_id, add_metadata_video, get_metadata_video,
                                 like_video, dislike_video, comment_video, get_like_count, get_comments_video, follow, unfollow, get_random_video,
                                 get_like_state, get_users_videos, is_following, view_video, save_video, unsave_video, get_saved_videos, get_notwatched_random_video,
-                                get_followed_video, get_friends_video, get_views, get_users_liked_videos, get_users_saved_videos)
+                                get_followed_video, get_friends_video, get_views, get_users_liked_videos, get_users_saved_videos, get_save_state)
 from app.services.auth import get_user_by_id
 from app.core.config import settings
 
@@ -126,6 +126,11 @@ def watch(video_id:str, user:User = Depends(get_current_user), db:Session = Depe
 @router.get("/view/{video_id}")
 def g_views(video_id:str, db:Session = Depends(get_db)):
     return get_views(video_id, db)
+
+@router.get("/{video_id}/save_state")
+def sav_state_video(video_id:str, user:User = Depends(get_current_user),  db:Session = Depends(get_db)):
+    video = get_metadata_video(video_id, db)
+    return get_save_state(video, user, db)
 
 @router.put("/save/{video_id}")
 def sv_vd(video_id:str, user:User = Depends(get_current_user), db:Session = Depends(get_db)):
