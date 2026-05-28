@@ -22,7 +22,6 @@ import {
   fetchFollowState,
   fetchMe,
   fetchProfileById,
-  fetchVideos,
   followUser,
   unfollowUser,
   uploadProfilePictureApi
@@ -77,6 +76,13 @@ export default function ProfilePage() {
 
   const [showFollowings, setShowFollowings] =
     useState(false)
+
+  const [activeTab, setActiveTab] =
+    useState<
+      'videos' |
+      'saved' |
+      'liked'
+    >('videos')
 
   async function loadFollowersList() {
     if (!user_id) return
@@ -136,6 +142,51 @@ export default function ProfilePage() {
     )
   }
 
+  async function fetchTabVideos(
+    type:
+      | 'videos'
+      | 'saved'
+      | 'liked'
+  ) {
+    if (!user_id) return
+
+    try {
+      let endpoint = ''
+
+      if (type === 'videos') {
+        endpoint =
+          `/api/video/profile/${user_id}/videos`
+      }
+
+      if (type === 'saved') {
+        endpoint =
+          `/api/video/profile/${user_id}/videos/saved`
+      }
+
+      if (type === 'liked') {
+        endpoint =
+          `/api/video/profile/${user_id}/videos/liked`
+      }
+
+      const response =
+        await fetch(endpoint)
+
+      const data =
+        await response.json()
+
+      setVideos(
+        Array.isArray(data)
+          ? data
+          : []
+      )
+
+    } catch (err) {
+      console.error(err)
+
+      setVideos([])
+    }
+  }
+
   async function fetchProfile() {
     if (!user_id) return
 
@@ -190,13 +241,8 @@ export default function ProfilePage() {
           : 0
       )
 
-      const videosData =
-        await fetchVideos(user_id)
-
-      setVideos(
-        Array.isArray(videosData)
-          ? videosData
-          : []
+      await fetchTabVideos(
+        activeTab
       )
 
     } catch (err) {
@@ -275,6 +321,10 @@ export default function ProfilePage() {
   useEffect(() => {
     fetchProfile()
   }, [user_id])
+
+  useEffect(() => {
+    fetchTabVideos(activeTab)
+  }, [activeTab, user_id])
 
   if (loading) {
     return (
@@ -525,6 +575,101 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* VIDEO TABS */}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 20,
+          marginBottom: 30
+        }}
+      >
+        <button
+          onClick={() =>
+            setActiveTab(
+              'videos'
+            )
+          }
+          style={{
+            padding:
+              '10px 20px',
+
+            borderRadius: 12,
+
+            border: 'none',
+
+            cursor: 'pointer',
+
+            background:
+              activeTab ===
+              'videos'
+                ? '#0f9d58'
+                : '#333',
+
+            color: 'white'
+          }}
+        >
+          Videos
+        </button>
+
+        <button
+          onClick={() =>
+            setActiveTab(
+              'saved'
+            )
+          }
+          style={{
+            padding:
+              '10px 20px',
+
+            borderRadius: 12,
+
+            border: 'none',
+
+            cursor: 'pointer',
+
+            background:
+              activeTab ===
+              'saved'
+                ? '#0f9d58'
+                : '#333',
+
+            color: 'white'
+          }}
+        >
+          Saved
+        </button>
+
+        <button
+          onClick={() =>
+            setActiveTab(
+              'liked'
+            )
+          }
+          style={{
+            padding:
+              '10px 20px',
+
+            borderRadius: 12,
+
+            border: 'none',
+
+            cursor: 'pointer',
+
+            background:
+              activeTab ===
+              'liked'
+                ? '#0f9d58'
+                : '#333',
+
+            color: 'white'
+          }}
+        >
+          Liked
+        </button>
       </div>
 
       {/* VIDEOS */}
